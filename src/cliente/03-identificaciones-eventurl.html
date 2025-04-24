@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Keynua - Identificaciones - eventURL</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+		.form-container {
+			margin-bottom: 30px;
+			padding: 20px;
+			border: 1px solid #ddd;
+			border-radius: 5px;
+		}
+		.form-group {
+			margin-bottom: 15px;
+		}
+		label {
+			display: block;
+			margin-bottom: 5px;
+		}
+		input, select {
+			width: 100%;
+			padding: 8px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			box-sizing: border-box;
+		}
+		button {
+			background-color: #4CAF50;
+			color: white;
+			padding: 10px 15px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+		button:hover {
+			background-color: #45a049;
+		}
+		.message {
+			margin-top: 10px;
+			padding: 10px;
+			border-radius: 4px;
+		}
+		.success {
+			background-color: #dff0d8;
+			color: #3c763d;
+		}
+		.error {
+			background-color: #f2dede;
+			color: #a94442;
+		}
+		.widget-container {
+			height: 500px;
+			max-height: 500px;
+			width: 100%;
+			overflow: auto;
+		}
+		.events-container {
+			background-color: #f8f9fa;
+			padding: 15px;
+			border-radius: 4px;
+		}
+		.events-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 10px;
+		}
+		.events-select {
+			width: auto;
+			min-width: 200px;
+		}
+		.events-pre {
+			background-color: #fff;
+			padding: 15px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			max-height: 300px;
+			overflow: auto;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+		}
+	</style>
+</head>
+<body>
+	<ul><li><a href="Index.html">Inicio</a></li></ul>
+	<div class="form-container">
+		<h2>Crear Nueva Identificación</h2>
+		<form id="crearIdentificacionForm">
+			<div class="form-group">
+				<label for="titulo">Título de la Identificacion:</label>
+				<input type="text" id="titulo" name="titulo" required>
+			</div>
+			<div class="form-group">
+				<label for="nombre">Nombre del Usuario:</label>
+				<input type="text" id="nombre" name="nombre" value="Jett Teixeira" required>
+			</div>
+			<div class="form-group">
+				<label for="email">Email del Usuario:</label>
+				<input type="email" id="email" name="email" value="jett+ejemplo@keynua.com" required>
+			</div>	
+			<div class="form-group">
+				<label for="documentoUsuario">Documento del Usuario:</label>
+				<input type="text" id="documentoUsuario" name="documentoUsuario" value="75132806" required>
+			</div>
+			<button type="submit">Crear Identificación</button>
+		</form>
+		<div id="mensajeCrear" class="message" style="display: none;"></div>
+	</div>
+
+	<div class="form-container">
+		<h2>Seleccionar Identificación</h2>
+		<form id="seleccionarIdentificacionForm">
+			<div class="form-group">
+				<label for="identificacionSeleccionada">Identificaciones Disponibles:</label>
+				<select id="identificacionSeleccionada" name="identificacionSeleccionada" required>
+					<option value="">Seleccione una identificación</option>
+				</select>
+			</div>
+			<button type="submit">Seleccionar Identificación</button>
+		</form>
+		<div id="mensajeSeleccionar" class="message" style="display: none;"></div>
+	</div>
+
+	<div class="form-container">
+		<div class="events-container">
+			<div class="events-header">
+				<h3>Query Params</h3>
+			</div>
+			<pre id="eventoJson" class="events-pre">No hay eventos disponibles</pre>
+		</div>
+	</div>
+
+	<script>
+		const DOMINIO = "https://localhost:443";
+		let identificaciones = [];
+
+		// Función para cargar las identificaciones
+		async function cargarIdentificaciones() {
+			try {
+				const response = await fetch(`${DOMINIO}/obtener-identificaciones`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+				if (!response.ok) {
+					throw new Error("Error al cargar las identificaciones");
+				}
+				identificaciones = await response.json();
+				actualizarDropdown();
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeSeleccionar", error.message, "error");
+			}
+		}
+
+		// Función para actualizar el dropdown con las identificaciones
+		function actualizarDropdown() {
+			const select = document.getElementById("identificacionSeleccionada");
+			// Limpiar opciones existentes excepto la primera
+			while (select.options.length > 1) {
+				select.remove(1);
+			}
+			
+			// Agregar las identificaciones al dropdown
+			identificaciones.forEach(identificacion => {
+				const option = document.createElement("option");
+				option.value = identificacion.userToken;
+				option.textContent = identificacion.title;
+				select.appendChild(option);
+			});
+		}
+
+		// Función para mostrar el JSON formateado de los query params
+		function cargarQueryParams() {
+			const pre = document.getElementById("eventoJson");
+			const urlParams = new URLSearchParams(window.location.search);
+			pre.textContent = JSON.stringify(Object.fromEntries(urlParams.entries()), null, 2);
+		}
+
+		// Función para cargar el Widget de Keynua
+		function cargarWidget(token) {
+			// Construir la URL con los query params
+			const baseUrl = new URL("https://sign.stg.keynua.com");
+			baseUrl.searchParams.append("token", token);
+			baseUrl.searchParams.append("eventDoneURL", "https://localhost/03-identificaciones-eventurl.html?keynuares=done");
+			baseUrl.searchParams.append("eventErrorURL", "https://localhost/03-identificaciones-eventurl.html?keynuares=error");
+
+			// Abrir la URL en la misma pestaña
+			window.location.href = baseUrl.toString();
+		}
+
+		// Cargar identificaciones al cargar la página
+		document.addEventListener("DOMContentLoaded", cargarIdentificaciones);
+		document.addEventListener("DOMContentLoaded", cargarQueryParams);
+
+		// Manejar el envío del formulario de creación
+		document.getElementById("crearIdentificacionForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const titulo = document.getElementById("titulo").value;
+			const nombreUsuario = document.getElementById("nombre").value;
+			const correoUsuario = document.getElementById("email").value;
+			const documentoUsuario = document.getElementById("documentoUsuario").value;
+
+			try {
+				const response = await fetch(`${DOMINIO}/crear-identificacion`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario, documentoUsuario })
+				});
+
+				if (!response.ok) {
+					throw new Error("Error al crear la identificación");
+				}
+
+				const data = await response.json();
+				mostrarMensaje("mensajeCrear", "Identificación creada exitosamente", "success");
+				document.getElementById("crearIdentificacionForm").reset();
+				// Recargar la lista de identificaciones
+				await cargarIdentificaciones();
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeCrear", error.message, "error");
+			}
+		});
+
+		// Manejar el envío del formulario de selección
+		document.getElementById("seleccionarIdentificacionForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const token = document.getElementById("identificacionSeleccionada").value;
+			if (!token) {
+				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione una identificación", "error");
+				return;
+			}
+			// Cargar el widget con el token seleccionado
+			cargarWidget(token);
+			mostrarMensaje("mensajeSeleccionar", "Redirigiendo a Keynua...", "success");
+		});
+
+		function mostrarMensaje(elementId, mensaje, tipo) {
+			const elemento = document.getElementById(elementId);
+			elemento.textContent = mensaje;
+			elemento.className = `message ${tipo}`;
+			elemento.style.display = "block";
+		}
+	</script>
+</body>
+</html>

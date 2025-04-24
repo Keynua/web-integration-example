@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Keynua - Contratos - uiCallback</title>
+	<script src="https://sign.stg.keynua.com/widgets/widget.js"></script>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+		.form-container {
+			margin-bottom: 30px;
+			padding: 20px;
+			border: 1px solid #ddd;
+			border-radius: 5px;
+		}
+		.form-group {
+			margin-bottom: 15px;
+		}
+		label {
+			display: block;
+			margin-bottom: 5px;
+		}
+		input, select {
+			width: 100%;
+			padding: 8px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			box-sizing: border-box;
+		}
+		button {
+			background-color: #4CAF50;
+			color: white;
+			padding: 10px 15px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+		button:hover {
+			background-color: #45a049;
+		}
+		.message {
+			margin-top: 10px;
+			padding: 10px;
+			border-radius: 4px;
+		}
+		.success {
+			background-color: #dff0d8;
+			color: #3c763d;
+		}
+		.error {
+			background-color: #f2dede;
+			color: #a94442;
+		}
+		.widget-container {
+			height: 500px;
+			max-height: 500px;
+			width: 100%;
+			overflow: auto;
+		}
+		.events-container {
+			background-color: #f8f9fa;
+			padding: 15px;
+			border-radius: 4px;
+		}
+		.events-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 10px;
+		}
+		.events-select {
+			width: auto;
+			min-width: 200px;
+		}
+		.events-pre {
+			background-color: #fff;
+			padding: 15px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			max-height: 300px;
+			overflow: auto;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+		}
+	</style>
+</head>
+<body>
+	<ul><li><a href="Index.html">Inicio</a></li></ul>
+	<div class="form-container">
+		<h2>Crear Nuevo Contrato</h2>
+		<form id="crearContratoForm">
+			<div class="form-group">
+				<label for="titulo">Título del Contrato:</label>
+				<input type="text" id="titulo" name="titulo" required>
+			</div>
+			<div class="form-group">
+				<label for="nombre">Nombre del Usuario:</label>
+				<input type="text" id="nombre" name="nombre" value="Jett Teixeira" required>
+			</div>
+			<div class="form-group">
+				<label for="email">Email del Usuario:</label>
+				<input type="email" id="email" name="email" value="jett+ejemplo@keynua.com" required>
+			</div>
+			<button type="submit">Crear Contrato</button>
+		</form>
+		<div id="mensajeCrear" class="message" style="display: none;"></div>
+	</div>
+
+	<div class="form-container">
+		<h2>Seleccionar Contrato</h2>
+		<form id="seleccionarContratoForm">
+			<div class="form-group">
+				<label for="contratoSeleccionado">Contratos Disponibles:</label>
+				<select id="contratoSeleccionado" name="contratoSeleccionado" required>
+					<option value="">Seleccione un contrato</option>
+				</select>
+			</div>
+			<button type="submit">Seleccionar Contrato</button>
+		</form>
+		<div id="mensajeSeleccionar" class="message" style="display: none;"></div>
+	</div>
+
+	<div class="form-container">
+		<div id="widget-container" class="widget-container"></div>
+	</div>
+
+	<div class="form-container">
+		<div class="events-container">
+			<div class="events-header">
+				<h3>Eventos del Widget</h3>
+				<select id="eventosDropdown" class="events-select">
+					<option value="">Seleccione un evento</option>
+				</select>
+			</div>
+			<pre id="eventoJson" class="events-pre">No hay eventos disponibles</pre>
+		</div>
+	</div>
+
+	<script>
+		const DOMINIO = "https://localhost:443";
+		let contratos = [];
+		let eventos = [];
+
+		const keynuaTheme = {
+			"reset": {
+				"fontFamily": "\"Open Sans\", -apple-system, \"Segoe UI\", Ubuntu, Roboto, \"Droid Sans\", \"Helvetica Neue\", sans-serif",
+				"backgroundColor": "#FBFCFD",
+				"color": "#6A737D",
+				"fontSize": "14px",
+				"position": "relative",
+				"boxSizing": "border-box",
+			},
+			"viewContainer": {
+				"boxSizing": "border-box",
+				"paddingLeft": "16px",
+				"paddingRight": "16px",
+			},
+			"flatViewContainer": {
+				"boxSizing": "border-box",
+				"paddingLeft": "16px",
+				"paddingRight": "16px",
+				"paddingTop": "32px",
+				"paddingBottom": "32px",
+				"borderBottom": "1px solid #E1E4E8",
+			},
+			"view": {
+				"boxSizing": "border-box",
+				"marginLeft": "auto",
+				"marginRight": "auto",
+				"maxWidth": "800px",
+				"textAlign": "center",
+			},
+			"flatView": {
+				"boxSizing": "border-box",
+				"textAlign": "left",
+				"marginLeft": "auto",
+				"marginRight": "auto",
+				"maxWidth": "800px"
+			},
+			"bannerBox": {
+				"border": "1px solid #F6F8FF",
+				"padding": "16px",
+				"borderRadius": "8px",
+				"textAlign": "left",
+				"background": "#F6F8FF",
+				"boxSizing": "border-box"
+			},
+			"bgDark": {
+				"backgroundColor": "#2C3348",
+				"color": "#ffffff"
+			},
+			"bgLight": {
+				"backgroundColor": "#ffffff"
+			},
+			"bgTheme": {
+				"backgroundColor": "#4A40FF",
+				"color": "#ffffff"
+			},
+			"disabledOverlay": {
+				"backgroundColor": "#FBFCFD",
+				"opacity": 0.7
+			},
+			"card": {
+				"boxSizing": "border-box",
+				"border": "1px solid #E1E4E8",
+				"backgroundColor": "#ffffff",
+				"borderRadius": "8px"
+			},
+			"placeholder": {
+				"boxSizing": "border-box",
+				"border": "1px solid #6A737D",
+				"backgroundColor": "#000000",
+				"borderRadius": "4px"
+			},
+			"placeholderEmpty": {
+				"boxSizing": "border-box",
+				"border": 0,
+				"backgroundColor": "transparent"
+			},
+			"placeholderVideoEmpty": {
+				"boxSizing": "border-box",
+				"border": 0,
+				"backgroundColor": "transparent"
+			},
+			"placeholderSignatureEmpty": {
+				"boxSizing": "border-box",
+				"border": 0,
+				"backgroundColor": "transparent"
+			},
+			"spacer": {
+				"flex": "1 2 0"
+			},
+			"paragraph": {
+				"boxSizing": "border-box",
+				"margin": 0,
+				"lineHeight": "1.3em",
+				"paddingBottom": "16px"
+			},
+			"h1": {
+				"boxSizing": "border-box",
+				"color": "#2F363D",
+				"fontSize": "26px",
+				"fontWeight": 600,
+				"lineHeight": "1.3em",
+				"margin": 0,
+				"paddingBottom": "8px"
+			},
+			"h2": {
+				"boxSizing": "border-box",
+				"color": "#24292E",
+				"fontSize": "22px",
+				"fontWeight": 600,
+				"lineHeight": "1.3em",
+				"margin": 0,
+				"paddingBottom": "8px"
+			},
+			"h3": {
+				"boxSizing": "border-box",
+				"fontSize": "14px",
+				"fontWeight": 600,
+				"lineHeight": "1.3em",
+				"margin": 0,
+				"paddingBottom": "16px"
+			},
+			"h4": {
+				"boxSizing": "border-box",
+				"fontSize": "16px",
+				"lineHeight": "1em",
+				"margin": 0,
+				"paddingBottom": "8px"
+			},
+			"h5": {
+				"boxSizing": "border-box",
+				"fontSize": "14px",
+				"lineHeight": "1em",
+				"margin": 0,
+				"paddingBottom": "8px"
+			},
+			"h6": {
+				"boxSizing": "border-box",
+				"fontSize": "12px",
+				"fontWeight": "normal",
+				"lineHeight": "1.3em",
+				"margin": 0,
+				"paddingTop": 0,
+				"paddingBottom": 0
+			},
+			"btn": {
+				"boxSizing": "border-box",
+				"fontWeight": 600,
+				"fontSize": "14px",
+				"padding": "12px 12px",
+				"backgroundColor": "#ffffff",
+				"color": "#4A40FF",
+				"border": "1px solid #4A40FF",
+				"borderRadius": "4px",
+			},
+			"tooltip": {
+				"backgroundColor": "#2C3348",
+				"color": "#ffffff"
+			},
+			"btnPrimary": {
+				"boxSizing": "border-box",
+				"backgroundColor": "#4A40FF",
+				"color": "#ffffff"
+			},
+			"btnSecondary": {
+				"boxSizing": "border-box",
+				"backgroundColor": "#CE00F7",
+				"border": "1px solid #CE00F7",
+				"color": "#ffffff"
+			},
+			"btnPlain": {
+				"boxSizing": "border-box",
+				"backgroundColor": "#FBFCFD",
+				"border": "1px solid #E1E4E8",
+				"color": "#24292E"
+			},
+			"btnDisabled": {
+				"boxSizing": "border-box",
+				"border": "1px solid #E1E4E8",
+				"backgroundColor": "#FBFCFD",
+				"color": "#E1E4E8"
+			},
+			"pt": {
+				"paddingTop": "16px"
+			},
+			"pb": {
+				"paddingBottom": "16px"
+			},
+			"pl": {
+				"paddingLeft": "16px"
+			},
+			"pr": {
+				"paddingRight": "16px"
+			},
+			"px": {
+				"paddingLeft": "16px",
+				"paddingRight": "16px"
+			},
+			"py": {
+				"paddingTop": "16px",
+				"paddingBottom": "16px"
+			},
+			"mt": {
+				"marginTop": "16px"
+			},
+			"mb": {
+				"marginBottom": "16px"
+			},
+			"ml": {
+				"marginLeft": "16px"
+			},
+			"mr": {
+				"marginRight": "16px"
+			},
+			"mx": {
+				"marginLeft": "16px",
+				"marginRight": "16px"
+			},
+			"my": {
+				"marginTop": "16px",
+				"marginBottom": "16px"
+			},
+			"textCenter": {
+				"textAlign": "center"
+			},
+			"textLeft": {
+				"textAlign": "left"
+			},
+			"textRight": {
+				"textAlign": "right"
+			},
+			"textBold": {
+				"fontWeight": 600
+			},
+			"textSemibold": {
+				"fontWeight": 500
+			},
+			"textLight": {
+				"fontWeight": 300
+			},
+			"colorGray": {
+				"color": "#2F363D"
+			},
+			"colorGrayLight": {
+				"color": "#6A737D"
+			},
+			"colorGrayDarker": {
+				"color": "#24292E"
+			},
+			"colorPrimary": {
+				"color": "#4A40FF"
+			},
+			"colorSecondary": {
+				"color": "#CE00F7"
+			},
+			"colorAlternate": {
+				"color": "#9890CA"
+			},
+			"colorError": {
+				"color": "#EF4B62"
+			},
+			"colorWarning": {
+				"color": "#F8B95E"
+			},
+			"colorInfo": {
+				"color": "#003BBC"
+			},
+			"colorSuccess": {
+				"color": "#36B37E"
+			},
+			"bgPrimary": {
+				"backgroundColor": "#F6F8FF"
+			},
+			"bgSecondary": {
+				"backgroundColor": "#FFF5FC"
+			},
+			"bgAlternate": {
+				"backgroundColor": "#F5F1F7"
+			},
+			"bgError": {
+				"backgroundColor": "#FDEEF0"
+			},
+			"bgWarning": {
+				"backgroundColor": "#FEF8F0"
+			},
+			"bgInfo": {
+				"backgroundColor": "#003BBC"
+			},
+			"bgSuccess": {
+				"backgroundColor": "#36B37E"
+			},
+			"bgShortcode": {
+				"backgroundColor": "#F6F8FF",
+				"borderRadius": 6,
+				"width": "fit-content"
+			},
+			"fontSmall": {
+				"fontSize": "12px"
+			},
+			"fontNormal": {
+				"fontSize": "14px"
+			},
+			"fontMedium": {
+				"fontSize": "18px"
+			},
+			"fontLarge": {
+				"fontSize": "20px"
+			},
+			"fontH1": {
+				"fontSize": "26px"
+			},
+			"fontH2": {
+				"fontSize": "22px"
+			},
+			"fontH3": {
+				"fontSize": "14px"
+			},
+			"fontH4": {
+				"fontSize": "16px"
+			},
+			"fontH5": {
+				"fontSize": "14px"
+			},
+			"fontH6": {
+				"fontSize": "12px"
+			},
+			"inputText": {
+				"boxSizing": "border-box",
+				"paddingTop": "24px",
+				"paddingBottom": "24px",
+				"paddingLeft": "24px",
+				"paddingRight": "24px",
+				"lineHeight": "1.3em",
+				"borderRadius": "4px",
+				"backgroundColor": "#ffffff",
+				"color": "#24292E",
+				"border": "1px solid #E1E4E8",
+				"width": "100%",
+				"display": "block",
+				"outlineColor": "#4A40FF",
+				"fontSize": "14px",
+				"textAlign": "center"
+			},
+			"inputTextError": {
+				"boxSizing": "border-box",
+				"paddingTop": "24px",
+				"paddingBottom": "24px",
+				"paddingLeft": "24px",
+				"paddingRight": "24px",
+				"lineHeight": "1.3em",
+				"borderRadius": "4px",
+				"backgroundColor": "#ffffff",
+				"color": "#24292E",
+				"border": "1px solid #EF4B62",
+				"width": "100%",
+				"display": "block",
+				"outlineColor": "#EF4B62",
+				"fontSize": "14px",
+				"textAlign": "center"
+			},
+			"select": {
+				"boxSizing": "border-box",
+				"paddingTop": "8px",
+				"paddingBottom": "8px",
+				"paddingLeft": "8px",
+				"paddingRight": "8px",
+				"lineHeight": "1.3em",
+				"borderRadius": "4px",
+				"backgroundColor": "#ffffff",
+				"color": "#24292E",
+				"border": "1px solid #6A737D",
+				"width": "100%",
+				"display": "block",
+				"outlineColor": "#4A40FF",
+				"fontSize": "14px"
+			},
+			"showOniOS": {
+				"visibility": "hidden"
+			},
+			"link": {
+				"color": "#2F363D",
+				"textDecoration": "none",
+				"fontWeight": "bold"
+			},
+			"dFlex": {
+				"boxSizing": "border-box",
+				"display": "flex"
+			},
+			"flexColumn": {
+				"flexDirection": "column"
+			},
+			"flexWrapWrap": {
+				"flexWrap": "wrap"
+			},
+			"justifyContentEvenly": {
+				"boxSizing": "border-box",
+				"justifyContent": "space-evenly"
+			},
+			"justifyContentCenter": {
+				"boxSizing": "border-box",
+				"justifyContent": "center"
+			},
+			"alignMiddle": {
+				"boxSizing": "border-box",
+				"alignItems": "center"
+			},
+			"demoVdeoInstructionDisclamer": {
+				"padding": "0 16px",
+				"left": 0,
+				"right": 0,
+				"bottom": "76px"
+			},
+			"header": {
+				"boxSizing": "border-box",
+				"display": "flex",
+				"justifyContent": "center",
+				"alignItems": "center",
+				"borderBottom": "1px solid #E1E4E8",
+				"fontSize": "14px",
+				"paddingTop": "16px",
+				"paddingBottom": "16px",
+				"marginBottom": "16px",
+				"marginLeft": "-16px",
+				"marginRight": "-16px",
+				"backgroundColor": "#ffffff"
+			},
+			"keynuaOverlayHintRotate": {
+				"zIndex": 2
+			},
+			"keynuaOverlayHintText": {
+				"boxSizing": "border-box",
+				"display": "inline-block",
+				"padding": "5px 10px",
+				"backgroundColor": "rgba(255,255,255,0.9)",
+				"color": "black",
+				"borderRadius": "5px",
+				"zIndex": 3
+			},
+			"keynuaOverlayHint": {
+				"boxSizing": "border-box",
+				"display": "inline-block",
+				"width": "auto",
+				"padding": "5px 10px",
+				"backgroundColor": "rgba(255,255,255,0.9)",
+				"color": "black",
+				"borderRadius": "5px",
+				"zIndex": 3
+			},
+			"keynuaOverlayHintTop": {
+				"boxSizing": "border-box",
+				"display": "inline-block",
+				"width": "auto",
+				"padding": "5px 10px",
+				"backgroundColor": "rgba(255,255,255,0.9)",
+				"color": "black",
+				"borderRadius": "5px",
+				"zIndex": 3
+			},
+			"shortCodeEven": {
+				"color": "#4A40FF",
+				"fontWeight": 600
+			},
+			"shortCodeOdd": {
+				"color": "#CE00F7",
+				"fontWeight": 600
+			},
+			"progressStop1": {
+				"stopColor": "#4A40FF"
+			},
+			"progressStop2": {
+				"stopColor": "#CE00F7"
+			},
+			"progressPercentText": {
+				"color": "currentColor"
+			},
+			"progressBottomText": {
+				"display": "block"
+			},
+			"instructionContainer": {
+				"backgroundColor": "#F6F8FF",
+				"padding": "10px 16px",
+				"marginBottom": "16px",
+				"display": "flex",
+				"alignItems": "center",
+				"borderRadius": "4px"
+			},
+			"minWidth0": {
+				"minWidth": "0rem"
+			},
+			"minWidth1": {
+				"minWidth": "1rem"
+			},
+			"minWidth2": {
+				"minWidth": "2rem"
+			},
+			"minWidth3": {
+				"minWidth": "3rem"
+			},
+			"minWidth4": {
+				"minWidth": "4rem"
+			},
+			"minWidth5": {
+				"minWidth": "5rem"
+			},
+			"minWidth6": {
+				"minWidth": "6rem"
+			},
+			"minWidth7": {
+				"minWidth": "7rem"
+			},
+			"minWidth8": {
+				"minWidth": "8rem"
+			},
+			"minWidth9": {
+				"minWidth": "9rem"
+			},
+			"minWidth10": {
+				"minWidth": "10rem"
+			},
+			"minWidth11": {
+				"minWidth": "11rem"
+			},
+			"minWidth12": {
+				"minWidth": "12rem"
+			},
+			"minWidth13": {
+				"minWidth": "13rem"
+			},
+			"minWidth14": {
+				"minWidth": "14rem"
+			},
+			"minWidth15": {
+				"minWidth": "15rem"
+			},
+			"minWidth16": {
+				"minWidth": "16rem"
+			},
+			"minWidth17": {
+				"minWidth": "17rem"
+			},
+			"minWidth18": {
+				"minWidth": "18rem"
+			},
+			"minWidth19": {
+				"minWidth": "19rem"
+			},
+			"minWidth20": {
+				"minWidth": "20rem"
+			},
+			"minWidth21": {
+				"minWidth": "21rem"
+			},
+			"minWidth22": {
+				"minWidth": "22rem"
+			},
+			"minWidth23": {
+				"minWidth": "23rem"
+			},
+			"minWidth24": {
+				"minWidth": "24rem"
+			},
+			"minWidth25": {
+				"minWidth": "25rem"
+			},
+			"minWidth26": {
+				"minWidth": "26rem"
+			},
+			"minWidth27": {
+				"minWidth": "27rem"
+			},
+			"minWidth28": {
+				"minWidth": "28rem"
+			},
+			"minWidth29": {
+				"minWidth": "29rem"
+			},
+			"minWidth30": {
+				"minWidth": "30rem"
+			},
+			"minWidth31": {
+				"minWidth": "31rem"
+			},
+			"minWidth32": {
+				"minWidth": "32rem"
+			},
+			"minWidth33": {
+				"minWidth": "33rem"
+			},
+			"minWidth34": {
+				"minWidth": "34rem"
+			},
+			"minWidth35": {
+				"minWidth": "35rem"
+			},
+			"minWidth36": {
+				"minWidth": "36rem"
+			},
+			"minWidth37": {
+				"minWidth": "37rem"
+			},
+			"minWidth38": {
+				"minWidth": "38rem"
+			},
+			"minWidth39": {
+				"minWidth": "39rem"
+			},
+			"minWidth40": {
+				"minWidth": "40rem"
+			},
+			"minWidth41": {
+				"minWidth": "41rem"
+			},
+			"minWidth42": {
+				"minWidth": "42rem"
+			},
+			"minWidth43": {
+				"minWidth": "43rem"
+			},
+			"minWidth44": {
+				"minWidth": "44rem"
+			},
+			"minWidth45": {
+				"minWidth": "45rem"
+			},
+			"minWidth46": {
+				"minWidth": "46rem"
+			},
+			"minWidth47": {
+				"minWidth": "47rem"
+			},
+			"minWidth48": {
+				"minWidth": "48rem"
+			},
+			"minWidth49": {
+				"minWidth": "49rem"
+			},
+			"flex0": {
+				"flex": "0rem"
+			},
+			"flex1": {
+				"flex": "1rem"
+			},
+			"flex2": {
+				"flex": "2rem"
+			},
+			"flex3": {
+				"flex": "3rem"
+			},
+			"flex4": {
+				"flex": "4rem"
+			},
+			"flex5": {
+				"flex": "5rem"
+			},
+			"flex6": {
+				"flex": "6rem"
+			},
+			"flex7": {
+				"flex": "7rem"
+			},
+			"flex8": {
+				"flex": "8rem"
+			},
+			"flex9": {
+				"flex": "9rem"
+			},
+			"flex10": {
+				"flex": "10rem"
+			},
+			"flex11": {
+				"flex": "11rem"
+			},
+			"flex12": {
+				"flex": "12rem"
+			},
+			"flex13": {
+				"flex": "13rem"
+			},
+			"flex14": {
+				"flex": "14rem"
+			},
+			"flex15": {
+				"flex": "15rem"
+			},
+			"flex16": {
+				"flex": "16rem"
+			},
+			"flex17": {
+				"flex": "17rem"
+			},
+			"flex18": {
+				"flex": "18rem"
+			},
+			"flex19": {
+				"flex": "19rem"
+			},
+			"flex20": {
+				"flex": "20rem"
+			},
+			"flex21": {
+				"flex": "21rem"
+			},
+			"flex22": {
+				"flex": "22rem"
+			},
+			"flex23": {
+				"flex": "23rem"
+			},
+			"flex24": {
+				"flex": "24rem"
+			},
+			"flex25": {
+				"flex": "25rem"
+			},
+			"flex26": {
+				"flex": "26rem"
+			},
+			"flex27": {
+				"flex": "27rem"
+			},
+			"flex28": {
+				"flex": "28rem"
+			},
+			"flex29": {
+				"flex": "29rem"
+			},
+			"flex30": {
+				"flex": "30rem"
+			},
+			"flex31": {
+				"flex": "31rem"
+			},
+			"flex32": {
+				"flex": "32rem"
+			},
+			"flex33": {
+				"flex": "33rem"
+			},
+			"flex34": {
+				"flex": "34rem"
+			},
+			"flex35": {
+				"flex": "35rem"
+			},
+			"flex36": {
+				"flex": "36rem"
+			},
+			"flex37": {
+				"flex": "37rem"
+			},
+			"flex38": {
+				"flex": "38rem"
+			},
+			"flex39": {
+				"flex": "39rem"
+			},
+			"flex40": {
+				"flex": "40rem"
+			},
+			"flex41": {
+				"flex": "41rem"
+			},
+			"flex42": {
+				"flex": "42rem"
+			},
+			"flex43": {
+				"flex": "43rem"
+			},
+			"flex44": {
+				"flex": "44rem"
+			},
+			"flex45": {
+				"flex": "45rem"
+			},
+			"flex46": {
+				"flex": "46rem"
+			},
+			"flex47": {
+				"flex": "47rem"
+			},
+			"flex48": {
+				"flex": "48rem"
+			},
+			"flex49": {
+				"flex": "49rem"
+			},
+			"gap0": {
+				"gap": "0px"
+			},
+			"gap1": {
+				"gap": "1px"
+			},
+			"gap2": {
+				"gap": "2px"
+			},
+			"gap3": {
+				"gap": "3px"
+			},
+			"gap4": {
+				"gap": "4px"
+			},
+			"gap5": {
+				"gap": "5px"
+			},
+			"gap6": {
+				"gap": "6px"
+			},
+			"gap7": {
+				"gap": "7px"
+			},
+			"gap8": {
+				"gap": "8px"
+			},
+			"gap9": {
+				"gap": "9px"
+			},
+			"gap10": {
+				"gap": "10px"
+			},
+			"gap11": {
+				"gap": "11px"
+			},
+			"gap12": {
+				"gap": "12px"
+			},
+			"gap13": {
+				"gap": "13px"
+			},
+			"gap14": {
+				"gap": "14px"
+			},
+			"gap15": {
+				"gap": "15px"
+			},
+			"gap16": {
+				"gap": "16px"
+			},
+			"gap17": {
+				"gap": "17px"
+			},
+			"gap18": {
+				"gap": "18px"
+			},
+			"gap19": {
+				"gap": "19px"
+			},
+			"gap20": {
+				"gap": "20px"
+			},
+			"gap21": {
+				"gap": "21px"
+			},
+			"gap22": {
+				"gap": "22px"
+			},
+			"gap23": {
+				"gap": "23px"
+			},
+			"gap24": {
+				"gap": "24px"
+			},
+			"gap25": {
+				"gap": "25px"
+			},
+			"gap26": {
+				"gap": "26px"
+			},
+			"gap27": {
+				"gap": "27px"
+			},
+			"gap28": {
+				"gap": "28px"
+			},
+			"gap29": {
+				"gap": "29px"
+			},
+			"gap30": {
+				"gap": "30px"
+			},
+			"gap31": {
+				"gap": "31px"
+			},
+			"gap32": {
+				"gap": "32px"
+			},
+			"gap33": {
+				"gap": "33px"
+			},
+			"gap34": {
+				"gap": "34px"
+			},
+			"gap35": {
+				"gap": "35px"
+			},
+			"gap36": {
+				"gap": "36px"
+			},
+			"gap37": {
+				"gap": "37px"
+			},
+			"gap38": {
+				"gap": "38px"
+			},
+			"gap39": {
+				"gap": "39px"
+			},
+			"gap40": {
+				"gap": "40px"
+			},
+			"gap41": {
+				"gap": "41px"
+			},
+			"gap42": {
+				"gap": "42px"
+			},
+			"gap43": {
+				"gap": "43px"
+			},
+			"gap44": {
+				"gap": "44px"
+			},
+			"gap45": {
+				"gap": "45px"
+			},
+			"gap46": {
+				"gap": "46px"
+			},
+			"gap47": {
+				"gap": "47px"
+			},
+			"gap48": {
+				"gap": "48px"
+			},
+			"gap49": {
+				"gap": "49px"
+			},
+			"pt0": {
+				"paddingTop": "0"
+			},
+			"pb0": {
+				"paddingBottom": "0"
+			},
+			"pl0": {
+				"paddingLeft": "0"
+			},
+			"pr0": {
+				"paddingRight": "0"
+			},
+			"px0": {
+				"paddingLeft": "0",
+				"paddingRight": "0"
+			},
+			"py0": {
+				"paddingTop": "0",
+				"paddingBottom": "0"
+			},
+			"mt0": {
+				"marginTop": "0"
+			},
+			"mb0": {
+				"marginBottom": "0"
+			},
+			"ml0": {
+				"marginLeft": "0"
+			},
+			"mr0": {
+				"marginRight": "0"
+			},
+			"mx0": {
+				"marginLeft": "0",
+				"marginRight": "0"
+			},
+			"my0": {
+				"marginTop": "0",
+				"marginBottom": "0"
+			},
+			"pt1": {
+				"paddingTop": "4px"
+			},
+			"pb1": {
+				"paddingBottom": "4px"
+			},
+			"pl1": {
+				"paddingLeft": "4px"
+			},
+			"pr1": {
+				"paddingRight": "4px"
+			},
+			"px1": {
+				"paddingLeft": "4px",
+				"paddingRight": "4px"
+			},
+			"py1": {
+				"paddingTop": "4px",
+				"paddingBottom": "4px"
+			},
+			"mt1": {
+				"marginTop": "4px"
+			},
+			"mb1": {
+				"marginBottom": "4px"
+			},
+			"ml1": {
+				"marginLeft": "4px"
+			},
+			"mr1": {
+				"marginRight": "4px"
+			},
+			"mx1": {
+				"marginLeft": "4px",
+				"marginRight": "4px"
+			},
+			"my1": {
+				"marginTop": "4px",
+				"marginBottom": "4px"
+			},
+			"pt2": {
+				"paddingTop": "8px"
+			},
+			"pb2": {
+				"paddingBottom": "8px"
+			},
+			"pl2": {
+				"paddingLeft": "8px"
+			},
+			"pr2": {
+				"paddingRight": "8px"
+			},
+			"px2": {
+				"paddingLeft": "8px",
+				"paddingRight": "8px"
+			},
+			"py2": {
+				"paddingTop": "8px",
+				"paddingBottom": "8px"
+			},
+			"mt2": {
+				"marginTop": "8px"
+			},
+			"mb2": {
+				"marginBottom": "8px"
+			},
+			"ml2": {
+				"marginLeft": "8px"
+			},
+			"mr2": {
+				"marginRight": "8px"
+			},
+			"mx2": {
+				"marginLeft": "8px",
+				"marginRight": "8px"
+			},
+			"my2": {
+				"marginTop": "8px",
+				"marginBottom": "8px"
+			},
+			"pt3": {
+				"paddingTop": "16px"
+			},
+			"pb3": {
+				"paddingBottom": "16px"
+			},
+			"pl3": {
+				"paddingLeft": "16px"
+			},
+			"pr3": {
+				"paddingRight": "16px"
+			},
+			"px3": {
+				"paddingLeft": "16px",
+				"paddingRight": "16px"
+			},
+			"py3": {
+				"paddingTop": "16px",
+				"paddingBottom": "16px"
+			},
+			"mt3": {
+				"marginTop": "16px"
+			},
+			"mb3": {
+				"marginBottom": "16px"
+			},
+			"ml3": {
+				"marginLeft": "16px"
+			},
+			"mr3": {
+				"marginRight": "16px"
+			},
+			"mx3": {
+				"marginLeft": "16px",
+				"marginRight": "16px"
+			},
+			"my3": {
+				"marginTop": "16px",
+				"marginBottom": "16px"
+			},
+			"pt4": {
+				"paddingTop": "24px"
+			},
+			"pb4": {
+				"paddingBottom": "24px"
+			},
+			"pl4": {
+				"paddingLeft": "24px"
+			},
+			"pr4": {
+				"paddingRight": "24px"
+			},
+			"px4": {
+				"paddingLeft": "24px",
+				"paddingRight": "24px"
+			},
+			"py4": {
+				"paddingTop": "24px",
+				"paddingBottom": "24px"
+			},
+			"mt4": {
+				"marginTop": "24px"
+			},
+			"mb4": {
+				"marginBottom": "24px"
+			},
+			"ml4": {
+				"marginLeft": "24px"
+			},
+			"mr4": {
+				"marginRight": "24px"
+			},
+			"mx4": {
+				"marginLeft": "24px",
+				"marginRight": "24px"
+			},
+			"my4": {
+				"marginTop": "24px",
+				"marginBottom": "24px"
+			},
+			"pt5": {
+				"paddingTop": "32px"
+			},
+			"pb5": {
+				"paddingBottom": "32px"
+			},
+			"pl5": {
+				"paddingLeft": "32px"
+			},
+			"pr5": {
+				"paddingRight": "32px"
+			},
+			"px5": {
+				"paddingLeft": "32px",
+				"paddingRight": "32px"
+			},
+			"py5": {
+				"paddingTop": "32px",
+				"paddingBottom": "32px"
+			},
+			"mt5": {
+				"marginTop": "32px"
+			},
+			"mb5": {
+				"marginBottom": "32px"
+			},
+			"ml5": {
+				"marginLeft": "32px"
+			},
+			"mr5": {
+				"marginRight": "32px"
+			},
+			"mx5": {
+				"marginLeft": "32px",
+				"marginRight": "32px"
+			},
+			"my5": {
+				"marginTop": "32px",
+				"marginBottom": "32px"
+			},
+			"pt6": {
+				"paddingTop": "40px"
+			},
+			"pb6": {
+				"paddingBottom": "40px"
+			},
+			"pl6": {
+				"paddingLeft": "40px"
+			},
+			"pr6": {
+				"paddingRight": "40px"
+			},
+			"px6": {
+				"paddingLeft": "40px",
+				"paddingRight": "40px"
+			},
+			"py6": {
+				"paddingTop": "40px",
+				"paddingBottom": "40px"
+			},
+			"mt6": {
+				"marginTop": "40px"
+			},
+			"mb6": {
+				"marginBottom": "40px"
+			},
+			"ml6": {
+				"marginLeft": "40px"
+			},
+			"mr6": {
+				"marginRight": "40px"
+			},
+			"mx6": {
+				"marginLeft": "40px",
+				"marginRight": "40px"
+			},
+			"my6": {
+				"marginTop": "40px",
+				"marginBottom": "40px"
+			},
+			"pt7": {
+				"paddingTop": "48px"
+			},
+			"pb7": {
+				"paddingBottom": "48px"
+			},
+			"pl7": {
+				"paddingLeft": "48px"
+			},
+			"pr7": {
+				"paddingRight": "48px"
+			},
+			"px7": {
+				"paddingLeft": "48px",
+				"paddingRight": "48px"
+			},
+			"py7": {
+				"paddingTop": "48px",
+				"paddingBottom": "48px"
+			},
+			"mt7": {
+				"marginTop": "48px"
+			},
+			"mb7": {
+				"marginBottom": "48px"
+			},
+			"ml7": {
+				"marginLeft": "48px"
+			},
+			"mr7": {
+				"marginRight": "48px"
+			},
+			"mx7": {
+				"marginLeft": "48px",
+				"marginRight": "48px"
+			},
+			"my7": {
+				"marginTop": "48px",
+				"marginBottom": "48px"
+			},
+			"pt8": {
+				"paddingTop": "56px"
+			},
+			"pb8": {
+				"paddingBottom": "56px"
+			},
+			"pl8": {
+				"paddingLeft": "56px"
+			},
+			"pr8": {
+				"paddingRight": "56px"
+			},
+			"px8": {
+				"paddingLeft": "56px",
+				"paddingRight": "56px"
+			},
+			"py8": {
+				"paddingTop": "56px",
+				"paddingBottom": "56px"
+			},
+			"mt8": {
+				"marginTop": "56px"
+			},
+			"mb8": {
+				"marginBottom": "56px"
+			},
+			"ml8": {
+				"marginLeft": "56px"
+			},
+			"mr8": {
+				"marginRight": "56px"
+			},
+			"mx8": {
+				"marginLeft": "56px",
+				"marginRight": "56px"
+			},
+			"my8": {
+				"marginTop": "56px",
+				"marginBottom": "56px"
+			},
+			"pt9": {
+				"paddingTop": "64px"
+			},
+			"pb9": {
+				"paddingBottom": "64px"
+			},
+			"pl9": {
+				"paddingLeft": "64px"
+			},
+			"pr9": {
+				"paddingRight": "64px"
+			},
+			"px9": {
+				"paddingLeft": "64px",
+				"paddingRight": "64px"
+			},
+			"py9": {
+				"paddingTop": "64px",
+				"paddingBottom": "64px"
+			},
+			"mt9": {
+				"marginTop": "64px"
+			},
+			"mb9": {
+				"marginBottom": "64px"
+			},
+			"ml9": {
+				"marginLeft": "64px"
+			},
+			"mr9": {
+				"marginRight": "64px"
+			},
+			"mx9": {
+				"marginLeft": "64px",
+				"marginRight": "64px"
+			},
+			"my9": {
+				"marginTop": "64px",
+				"marginBottom": "64px"
+			},
+			"pt10": {
+				"paddingTop": "72px"
+			},
+			"pb10": {
+				"paddingBottom": "72px"
+			},
+			"pl10": {
+				"paddingLeft": "72px"
+			},
+			"pr10": {
+				"paddingRight": "72px"
+			},
+			"px10": {
+				"paddingLeft": "72px",
+				"paddingRight": "72px"
+			},
+			"py10": {
+				"paddingTop": "72px",
+				"paddingBottom": "72px"
+			},
+			"mt10": {
+				"marginTop": "72px"
+			},
+			"mb10": {
+				"marginBottom": "72px"
+			},
+			"ml10": {
+				"marginLeft": "72px"
+			},
+			"mr10": {
+				"marginRight": "72px"
+			},
+			"mx10": {
+				"marginLeft": "72px",
+				"marginRight": "72px"
+			},
+			"my10": {
+				"marginTop": "72px",
+				"marginBottom": "72px"
+			},
+			"pt11": {
+				"paddingTop": "80px"
+			},
+			"pb11": {
+				"paddingBottom": "80px"
+			},
+			"pl11": {
+				"paddingLeft": "80px"
+			},
+			"pr11": {
+				"paddingRight": "80px"
+			},
+			"px11": {
+				"paddingLeft": "80px",
+				"paddingRight": "80px"
+			},
+			"py11": {
+				"paddingTop": "80px",
+				"paddingBottom": "80px"
+			},
+			"mt11": {
+				"marginTop": "80px"
+			},
+			"mb11": {
+				"marginBottom": "80px"
+			},
+			"ml11": {
+				"marginLeft": "80px"
+			},
+			"mr11": {
+				"marginRight": "80px"
+			},
+			"mx11": {
+				"marginLeft": "80px",
+				"marginRight": "80px"
+			},
+			"my11": {
+				"marginTop": "80px",
+				"marginBottom": "80px"
+			},
+			"pt12": {
+				"paddingTop": "88px"
+			},
+			"pb12": {
+				"paddingBottom": "88px"
+			},
+			"pl12": {
+				"paddingLeft": "88px"
+			},
+			"pr12": {
+				"paddingRight": "88px"
+			},
+			"px12": {
+				"paddingLeft": "88px",
+				"paddingRight": "88px"
+			},
+			"py12": {
+				"paddingTop": "88px",
+				"paddingBottom": "88px"
+			},
+			"mt12": {
+				"marginTop": "88px"
+			},
+			"mb12": {
+				"marginBottom": "88px"
+			},
+			"ml12": {
+				"marginLeft": "88px"
+			},
+			"mr12": {
+				"marginRight": "88px"
+			},
+			"mx12": {
+				"marginLeft": "88px",
+				"marginRight": "88px"
+			},
+			"my12": {
+				"marginTop": "88px",
+				"marginBottom": "88px"
+			},
+			"pt13": {
+				"paddingTop": "96px"
+			},
+			"pb13": {
+				"paddingBottom": "96px"
+			},
+			"pl13": {
+				"paddingLeft": "96px"
+			},
+			"pr13": {
+				"paddingRight": "96px"
+			},
+			"px13": {
+				"paddingLeft": "96px",
+				"paddingRight": "96px"
+			},
+			"py13": {
+				"paddingTop": "96px",
+				"paddingBottom": "96px"
+			},
+			"mt13": {
+				"marginTop": "96px"
+			},
+			"mb13": {
+				"marginBottom": "96px"
+			},
+			"ml13": {
+				"marginLeft": "96px"
+			},
+			"mr13": {
+				"marginRight": "96px"
+			},
+			"mx13": {
+				"marginLeft": "96px",
+				"marginRight": "96px"
+			},
+			"my13": {
+				"marginTop": "96px",
+				"marginBottom": "96px"
+			},
+			"fMedium": {
+				"fontSize": "18px"
+			},
+			"colorGray40": {
+				"color": "#6A737D"
+			},
+			"keynuaError": {
+				"fontSize": "14px",
+				"color": "#EF4B62",
+				"fontWeight": 600
+			},
+			"buttonOutlineSecondary": {
+				"boxSizing": "border-box",
+				"backgroundColor": "transparent",
+				"border": "1px solid #E1E4E8",
+				"color": "inherit"
+			},
+			"buttonOutlinePrimary": {
+				"boxSizing": "border-box",
+				"backgroundColor": "transparent",
+				"color": "#4A40FF"
+			}
+		};
+
+		const keynuaPrimitives = {
+			"colors": {
+				"white": "#ffffff",
+				"black": "#000000",
+				"shortCodeEven": "#4A40FF",
+				"shortCodeOdd": "#CE00F7",
+				"gray": {
+					"darker": "#24292E",
+					"dark": "#2F363D",
+					"base": "#6A737D",
+					"light": "#E1E4E8",
+					"lighter": "#FBFCFD"
+				},
+				"primary": {
+					"darker": "#20198F",
+					"dark": "#2B22B6",
+					"base": "#4A40FF",
+					"light": "#A9BCFF",
+					"lighter": "#F6F8FF"
+				},
+				"secondary": {
+					"darker": "#6B0764",
+					"dark": "#920391",
+					"base": "#CE00F7",
+					"light": "#FF7FFF",
+					"lighter": "#FFF5FC"
+				},
+				"alternate": {
+					"darker": "#2C3348",
+					"dark": "#484F73",
+					"base": "#9890CA",
+					"light": "#C8BAE3",
+					"lighter": "#F5F1F7"
+				},
+				"error": {
+					"darker": "#6D232D",
+					"dark": "#AE3748",
+					"base": "#EF4B62",
+					"light": "#F58CA1",
+					"lighter": "#FDEEF0"
+				},
+				"warning": {
+					"darker": "#9E763C",
+					"dark": "#CB984D",
+					"base": "#F8B95E",
+					"light": "#FBDFB5",
+					"lighter": "#FEF8F0"
+				},
+				"info": {
+					"darker": "#000987",
+					"dark": "#00179B",
+					"base": "#003BBC",
+					"light": "#589DEE",
+					"lighter": "#E4F0FF"
+				},
+				"success": {
+					"darker": "#006644",
+					"dark": "#118154",
+					"base": "#36B37E",
+					"light": "#88DDB1",
+					"lighter": "#E4F6EC"
+				}
+			},
+			"space": [
+				"0",
+				"4px",
+				"8px",
+				"16px",
+				"24px",
+				"32px",
+				"40px",
+				"48px",
+				"56px",
+				"64px",
+				"72px",
+				"80px",
+				"88px",
+				"96px"
+			],
+			"horizontalPadding": 16,
+			"verticalPadding": 16,
+			"radii": {
+				"none": "0",
+				"small": "2px",
+				"normal": "4px",
+				"large": "8px",
+				"xlarge": "12px"
+			},
+			"fontSizes": {
+				"small": "12px",
+				"normal": "14px",
+				"medium": "18px",
+				"large": "20px",
+				"h1": "26px",
+				"h2": "22px",
+				"h3": "14px",
+				"h4": "16px",
+				"h5": "14px",
+				"h6": "12px"
+			},
+			"fontWeights": {
+				"normal": 400,
+				"bold": 600,
+				"semibold": 500,
+				"light": 300
+			}
+		};
+
+		// Función para cargar los contratos
+		async function cargarContratos() {
+			try {
+				const response = await fetch(`${DOMINIO}/obtener-contratos`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+				if (!response.ok) {
+					throw new Error("Error al cargar los contratos");
+				}
+				contratos = await response.json();
+				actualizarDropdown();
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeSeleccionar", error.message, "error");
+			}
+		}
+
+		// Función para actualizar el dropdown con los contratos
+		function actualizarDropdown() {
+			const select = document.getElementById("contratoSeleccionado");
+			// Limpiar opciones existentes excepto la primera
+			while (select.options.length > 1) {
+				select.remove(1);
+			}
+			
+			// Agregar los contratos al dropdown
+			contratos.forEach(contrato => {
+				const option = document.createElement("option");
+				option.value = contrato.users[0].token;
+				option.textContent = contrato.title;
+				select.appendChild(option);
+			});
+		}
+
+		// Función para actualizar el dropdown de eventos
+		function actualizarDropdownEventos() {
+			const select = document.getElementById("eventosDropdown");
+			// Limpiar opciones existentes excepto la primera
+			while (select.options.length > 1) {
+				select.remove(1);
+			}
+			
+			// Agregar los eventos al dropdown en orden inverso
+			eventos.forEach((evento, index) => {
+				const option = document.createElement("option");
+				option.value = index;
+				option.textContent = `Evento ${eventos.length - index - 1} - ${evento.name}`;
+				select.appendChild(option);
+			});
+		}
+
+		// Función para mostrar el JSON formateado
+		function mostrarEventoJson(evento) {
+			const pre = document.getElementById("eventoJson");
+			pre.textContent = JSON.stringify(evento, null, 2);
+		}
+
+		// Función para cargar el Widget de Keynua
+		function cargarWidget(token) {
+			const widgetContainer = document.getElementsByClassName("widget-container")[0];
+			
+			if (!window.Keynua) {
+				mostrarMensaje("mensajeSeleccionar", "Error al cargar el widget", "error");
+				return;
+			}
+
+			// Limpiar eventos anteriores
+			eventos = [];
+			actualizarDropdownEventos();
+			document.getElementById("eventoJson").textContent = "No hay eventos disponibles";
+
+			window.Keynua.run({
+				token: token,
+				widgetContainerId: "widget-container",
+				autoRefresh: 30, // 30 segundos, refresca al completar
+				cameraFullScreen: false,    // imageinput, videoinput (No livenessinput)
+				documentsFullScreen: false, // documentos
+				signatureFullScreen: false, // imagesign
+				primitives: keynuaPrimitives, // base
+				// theme: keynuaTheme, // tema (sobrescribe la base/primitives)
+				uiCallback: (ev) => {
+					// Agregar el evento al inicio del array
+					eventos.unshift(ev);
+					// Actualizar el dropdown
+					actualizarDropdownEventos();
+					// Mostrar el evento más reciente
+					mostrarEventoJson(ev);
+					// Seleccionar el evento más reciente en el dropdown
+					document.getElementById("eventosDropdown").value = "0";
+				}
+			});
+		}
+
+		// Cargar contratos al cargar la página
+		document.addEventListener("DOMContentLoaded", cargarContratos);
+
+		// Manejar el envío del formulario de creación
+		document.getElementById("crearContratoForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const titulo = document.getElementById("titulo").value;
+			const nombreUsuario = document.getElementById("nombre").value;
+			const correoUsuario = document.getElementById("email").value;
+
+			try {
+				const response = await fetch(`${DOMINIO}/crear-contrato`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario })
+				});
+
+				if (!response.ok) {
+					throw new Error("Error al crear el contrato");
+				}
+
+				const data = await response.json();
+				mostrarMensaje("mensajeCrear", "Contrato creado exitosamente", "success");
+				document.getElementById("crearContratoForm").reset();
+				// Recargar la lista de contratos
+				await cargarContratos();
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeCrear", error.message, "error");
+			}
+		});
+
+		// Manejar el envío del formulario de selección
+		document.getElementById("seleccionarContratoForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const token = document.getElementById("contratoSeleccionado").value;
+			if (!token) {
+				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione un contrato", "error");
+				return;
+			}
+			// Cargar el widget con el token seleccionado
+			cargarWidget(token);
+			mostrarMensaje("mensajeSeleccionar", "Widget cargado exitosamente", "success");
+		});
+
+		// Manejar cambios en el dropdown de eventos
+		document.getElementById("eventosDropdown").addEventListener("change", (e) => {
+			const index = parseInt(e.target.value);
+			if (!isNaN(index) && index >= 0 && index < eventos.length) {
+				mostrarEventoJson(eventos[index]);
+			}
+		});
+
+		function mostrarMensaje(elementId, mensaje, tipo) {
+			const elemento = document.getElementById(elementId);
+			elemento.textContent = mensaje;
+			elemento.className = `message ${tipo}`;
+			elemento.style.display = "block";
+		}
+	</script>
+</body>
+</html>
