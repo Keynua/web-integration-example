@@ -21,6 +21,9 @@
 		.form-group {
 			margin-bottom: 15px;
 		}
+		h2 {
+			margin-top: 0;
+		}
 		label {
 			display: block;
 			margin-bottom: 5px;
@@ -42,6 +45,10 @@
 		}
 		button:hover {
 			background-color: #45a049;
+		}
+		button:disabled {
+			background-color: #ccc;
+			cursor: not-allowed;
 		}
 		.message {
 			margin-top: 10px;
@@ -87,12 +94,43 @@
 			white-space: pre-wrap;
 			word-wrap: break-word;
 		}
+		.description {
+			margin-top: 20px;
+			margin-bottom: 20px;
+			color: #666;
+			font-size: 0.9em;
+			line-height: 1.4;
+		}
+		.description ul {
+			list-style: none;
+			padding-left: 0;
+			margin: 0;
+		}
+		.description li {
+			position: relative;
+			padding-left: 20px;
+			margin-bottom: 0px;
+		}
+		.description li:before {
+			content: "-";
+			position: absolute;
+			left: 0;
+		}
 	</style>
 </head>
 <body>
-	<ul><li><a href="Index.html">Inicio</a></li></ul>
+	<h1>01. Keynua - Contratos - uiCallback</h1>
+	<p><a href="Index.html">volver</a></p>
+
 	<div class="form-container">
-		<h2>Crear Nuevo Contrato</h2>
+		<h2>A. Crear nuevo contrato</h2>
+		<div class="description">
+			<ul>
+				<li>Crea un nuevo contrato simple.</li>
+				<li>Para el front, revisa la función <span class="code">document.getElementById("crearContratoForm").addEventListener("submit", "</span></li>
+				<li>Para el back, revisa la función <span class="code">module.exports.crearContrato = async function crearContrato(req, res) {</span></li>
+			</ul>
+		</div>
 		<form id="crearContratoForm">
 			<div class="form-group">
 				<label for="titulo">Título del Contrato:</label>
@@ -112,13 +150,25 @@
 	</div>
 
 	<div class="form-container">
-		<h2>Seleccionar Contrato</h2>
+		<h2>B. Seleccionar contrato</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se puede seleccionar un contrato ya creado.</li>
+				<li>Para seleccionar un contrato, se debe pulsar el botón "Seleccionar Contrato".</li>
+				<li>Si no se encuentra el contrato en la lista, se puede ingresar el token manualmente.</li>
+				<li>Una vez presionado el botón se cargará el widget en la sección de abajo.</li>
+			</ul>
+		</div>
 		<form id="seleccionarContratoForm">
 			<div class="form-group">
 				<label for="contratoSeleccionado">Contratos Disponibles:</label>
-				<select id="contratoSeleccionado" name="contratoSeleccionado" required>
+				<select id="contratoSeleccionado" name="contratoSeleccionado">
 					<option value="">Seleccione un contrato</option>
 				</select>
+			</div>
+			<div class="form-group">
+				<label for="tokenId">Ingresa el token manualmente:</label>
+				<input type="text" id="tokenId" name="tokenId" value="" required>
 			</div>
 			<button type="submit">Seleccionar Contrato</button>
 		</form>
@@ -130,6 +180,14 @@
 	</div>
 
 	<div class="form-container">
+		<h2>C. Eventos del Widget</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se listan los eventos que se reciben del widget.</li>
+				<li>Cada vez que se emite un evento, se actualiza el menú desplegable y se muestra el JSON del evento en el área de texto.</li>
+				<li>Puede seleccionar eventos pasados usando el menú desplegable.</li>
+			</ul>
+		</div>
 		<div class="events-container">
 			<div class="events-header">
 				<h3>Eventos del Widget</h3>
@@ -143,6 +201,80 @@
 
 	<script>
 		const DOMINIO = "https://localhost:443";
+
+		// Manejar el envío del formulario de creación
+		document.getElementById("crearContratoForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+			const titulo = document.getElementById("titulo").value;
+			const nombreUsuario = document.getElementById("nombre").value;
+			const correoUsuario = document.getElementById("email").value;
+
+			try {
+				const response = await fetch(`${DOMINIO}/crear-contrato`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario })
+				});
+
+				if (!response.ok) {
+					throw new Error("Error al crear el contrato");
+				}
+
+				const data = await response.json();
+				mostrarMensaje("mensajeCrear", "Contrato creado exitosamente", "success");
+				document.getElementById("crearContratoForm").reset();
+				// Recargar la lista de contratos
+				await cargarContratos();
+				buttonSubmit.disabled = false;
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeCrear", error.message, "error");
+				buttonSubmit.disabled = false;
+			}
+		});
+
+		// Función para cargar el Widget de Keynua
+		function cargarWidget(token) {
+			const widgetContainer = document.getElementsByClassName("widget-container")[0];
+			
+			if (!window.Keynua) {
+				mostrarMensaje("mensajeSeleccionar", "Error al cargar el widget", "error");
+				return;
+			}
+
+			// Limpiar eventos anteriores
+			eventos = [];
+			actualizarDropdownEventos();
+			document.getElementById("eventoJson").textContent = "No hay eventos disponibles";
+
+			window.Keynua.run({
+				token: token,
+				widgetContainerId: "widget-container",
+				autoRefresh: 30, // 30 segundos, refresca al completar
+				uiCallback: (ev) => {
+					// Agregar el evento al inicio del array
+					eventos.unshift(ev);
+					// Actualizar el dropdown
+					actualizarDropdownEventos();
+					// Mostrar el evento más reciente
+					mostrarEventoJson(ev);
+					// Seleccionar el evento más reciente en el dropdown
+					document.getElementById("eventosDropdown").value = "0";
+				}
+			});
+		}
+
+		/**
+		 * ==============================
+		 * A partir de aqui son funciones auxiliares para el manejo y el buen
+		 * funcionamiento del ejemplo. No es necesario que se tengan en cuenta
+		 * para la integración con Keynua.
+		 * ==============================
+		 */
 		let contratos = [];
 		let eventos = [];
 
@@ -206,82 +338,43 @@
 			pre.textContent = JSON.stringify(evento, null, 2);
 		}
 
-		// Función para cargar el Widget de Keynua
-		function cargarWidget(token) {
-			const widgetContainer = document.getElementsByClassName("widget-container")[0];
-			
-			if (!window.Keynua) {
-				mostrarMensaje("mensajeSeleccionar", "Error al cargar el widget", "error");
-				return;
-			}
-
-			// Limpiar eventos anteriores
-			eventos = [];
-			actualizarDropdownEventos();
-			document.getElementById("eventoJson").textContent = "No hay eventos disponibles";
-
-			window.Keynua.run({
-				token: token,
-				widgetContainerId: "widget-container",
-				autoRefresh: 30, // 30 segundos, refresca al completar
-				uiCallback: (ev) => {
-					// Agregar el evento al inicio del array
-					eventos.unshift(ev);
-					// Actualizar el dropdown
-					actualizarDropdownEventos();
-					// Mostrar el evento más reciente
-					mostrarEventoJson(ev);
-					// Seleccionar el evento más reciente en el dropdown
-					document.getElementById("eventosDropdown").value = "0";
-				}
-			});
-		}
-
 		// Cargar contratos al cargar la página
 		document.addEventListener("DOMContentLoaded", cargarContratos);
 
-		// Manejar el envío del formulario de creación
-		document.getElementById("crearContratoForm").addEventListener("submit", async (e) => {
-			e.preventDefault();
-			const titulo = document.getElementById("titulo").value;
-			const nombreUsuario = document.getElementById("nombre").value;
-			const correoUsuario = document.getElementById("email").value;
-
-			try {
-				const response = await fetch(`${DOMINIO}/crear-contrato`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario })
-				});
-
-				if (!response.ok) {
-					throw new Error("Error al crear el contrato");
-				}
-
-				const data = await response.json();
-				mostrarMensaje("mensajeCrear", "Contrato creado exitosamente", "success");
-				document.getElementById("crearContratoForm").reset();
-				// Recargar la lista de contratos
-				await cargarContratos();
-			} catch (error) {
-				console.error("Error:", error);
-				mostrarMensaje("mensajeCrear", error.message, "error");
+		// Manejar cuando se selecciona un token
+		document.getElementById("contratoSeleccionado").addEventListener("change", (e) => {
+			const token = e.target.value;
+			if (!token) {
+				return;
 			}
+			document.getElementById("tokenId").value = token;
 		});
 
+		// Manejar cuando se ingresa un token manualmente
+		document.getElementById("tokenId").addEventListener("keydown", (e) => {
+			const select = document.getElementById("contratoSeleccionado");
+			select.selectedIndex = 0;
+			select.options[0].text = "Token manual";
+		});
+		
 		// Manejar el envío del formulario de selección
 		document.getElementById("seleccionarContratoForm").addEventListener("submit", async (e) => {
 			e.preventDefault();
-			const token = document.getElementById("contratoSeleccionado").value;
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+
+			// Obtener el token seleccionado
+			const token = document.getElementById("tokenId").value;
 			if (!token) {
 				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione un contrato", "error");
+				buttonSubmit.disabled = false;
 				return;
 			}
+
 			// Cargar el widget con el token seleccionado
 			cargarWidget(token);
 			mostrarMensaje("mensajeSeleccionar", "Widget cargado exitosamente", "success");
+			buttonSubmit.disabled = false;
 		});
 
 		// Manejar cambios en el dropdown de eventos

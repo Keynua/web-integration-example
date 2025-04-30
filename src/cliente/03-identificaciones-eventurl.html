@@ -20,6 +20,9 @@
 		.form-group {
 			margin-bottom: 15px;
 		}
+		h2 {
+			margin-top: 0;
+		}
 		label {
 			display: block;
 			margin-bottom: 5px;
@@ -41,6 +44,10 @@
 		}
 		button:hover {
 			background-color: #45a049;
+		}
+		button:disabled {
+			background-color: #ccc;
+			cursor: not-allowed;
 		}
 		.message {
 			margin-top: 10px;
@@ -86,12 +93,43 @@
 			white-space: pre-wrap;
 			word-wrap: break-word;
 		}
+		.description {
+			margin-top: 20px;
+			margin-bottom: 20px;
+			color: #666;
+			font-size: 0.9em;
+			line-height: 1.4;
+		}
+		.description ul {
+			list-style: none;
+			padding-left: 0;
+			margin: 0;
+		}
+		.description li {
+			position: relative;
+			padding-left: 20px;
+			margin-bottom: 0px;
+		}
+		.description li:before {
+			content: "-";
+			position: absolute;
+			left: 0;
+		}
 	</style>
 </head>
 <body>
-	<ul><li><a href="Index.html">Inicio</a></li></ul>
+	<h1>03. Keynua - Identificaciones - eventURL</h1>
+	<p><a href="Index.html">volver</a></p>
+
 	<div class="form-container">
-		<h2>Crear Nueva Identificación</h2>
+		<h2>A. Crear Nueva Identificación</h2>
+		<div class="description">
+			<ul>
+				<li>Crea una nueva identificación simple.</li>
+				<li>Para el front, revisa la función <span class="code">document.getElementById("crearIdentificacionForm").addEventListener("submit", "</span></li>
+				<li>Para el back, revisa la función <span class="code">module.exports.crearIdentificacion = async function crearIdentificacion(req, res) {</span></li>
+			</ul>
+		</div>
 		<form id="crearIdentificacionForm">
 			<div class="form-group">
 				<label for="titulo">Título de la Identificacion:</label>
@@ -115,13 +153,25 @@
 	</div>
 
 	<div class="form-container">
-		<h2>Seleccionar Identificación</h2>
+		<h2>B. Seleccionar Identificación</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se puede seleccionar una identificación ya creada.</li>
+				<li>Para seleccionar una identificación, se debe pulsar el botón "Seleccionar Identificación".</li>
+				<li>Si no se encuentra la identificación en la lista, se puede ingresar el token manualmente.</li>
+				<li>Una vez presionado el botón se cargará el widget en la sección de abajo.</li>
+			</ul>
+		</div>
 		<form id="seleccionarIdentificacionForm">
 			<div class="form-group">
 				<label for="identificacionSeleccionada">Identificaciones Disponibles:</label>
-				<select id="identificacionSeleccionada" name="identificacionSeleccionada" required>
+				<select id="identificacionSeleccionada" name="identificacionSeleccionada">
 					<option value="">Seleccione una identificación</option>
 				</select>
+			</div>
+			<div class="form-group">
+				<label for="tokenId">Ingresa el token manualmente:</label>
+				<input type="text" id="tokenId" name="tokenId" value="" required>
 			</div>
 			<button type="submit">Seleccionar Identificación</button>
 		</form>
@@ -129,16 +179,77 @@
 	</div>
 
 	<div class="form-container">
+		<h2>C. Query Params</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se listan los query params de la pagina actual.</li>
+				<li>Al finalizar el proceso, sera redirigido a la pagina actual con los query params keynuares=done o keynuares=error por la url definida en eventDoneURL y eventErrorURL.</li>
+				<li>Adicionalmente se agregaran otros query params que se setearan desde la respuesta del widget.</li>
+			</ul>
+		</div>
 		<div class="events-container">
-			<div class="events-header">
-				<h3>Query Params</h3>
-			</div>
-			<pre id="eventoJson" class="events-pre">No hay eventos disponibles</pre>
+			<pre id="eventoJson" class="events-pre">No hay query params</pre>
 		</div>
 	</div>
 
 	<script>
 		const DOMINIO = "https://localhost:443";
+
+		// Manejar el envío del formulario de creación
+		document.getElementById("crearIdentificacionForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+			const titulo = document.getElementById("titulo").value;
+			const nombreUsuario = document.getElementById("nombre").value;
+			const correoUsuario = document.getElementById("email").value;
+			const documentoUsuario = document.getElementById("documentoUsuario").value;
+
+			try {
+				const response = await fetch(`${DOMINIO}/crear-identificacion`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario, documentoUsuario })
+				});
+
+				if (!response.ok) {
+					throw new Error("Error al crear la identificación");
+				}
+
+				const data = await response.json();
+				mostrarMensaje("mensajeCrear", "Identificación creada exitosamente", "success");
+				document.getElementById("crearIdentificacionForm").reset();
+				// Recargar la lista de identificaciones
+				await cargarIdentificaciones();
+				buttonSubmit.disabled = false;
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeCrear", error.message, "error");
+				buttonSubmit.disabled = false;
+			}
+		});
+
+		// Función para cargar el Widget de Keynua
+		function cargarWidget(token) {
+			// Construir la URL con los query params
+			const baseUrl = new URL("https://sign.stg.keynua.com");
+			baseUrl.searchParams.append("token", token);
+			baseUrl.searchParams.append("eventDoneURL", "https://localhost/03-identificaciones-eventurl.html?keynuares=done");
+			baseUrl.searchParams.append("eventErrorURL", "https://localhost/03-identificaciones-eventurl.html?keynuares=error");
+
+			// Abrir la URL en la misma pestaña
+			window.location.href = baseUrl.toString();
+		}
+
+		/**
+		 * ==============================
+		 * A partir de aqui son funciones auxiliares para el manejo y el buen
+		 * funcionamiento del ejemplo. No es necesario que se tengan en cuenta
+		 * para la integración con Keynua.
+		 * ==============================
+		 */
 		let identificaciones = [];
 
 		// Función para cargar las identificaciones
@@ -185,65 +296,44 @@
 			pre.textContent = JSON.stringify(Object.fromEntries(urlParams.entries()), null, 2);
 		}
 
-		// Función para cargar el Widget de Keynua
-		function cargarWidget(token) {
-			// Construir la URL con los query params
-			const baseUrl = new URL("https://sign.stg.keynua.com");
-			baseUrl.searchParams.append("token", token);
-			baseUrl.searchParams.append("eventDoneURL", "https://localhost/03-identificaciones-eventurl.html?keynuares=done");
-			baseUrl.searchParams.append("eventErrorURL", "https://localhost/03-identificaciones-eventurl.html?keynuares=error");
-
-			// Abrir la URL en la misma pestaña
-			window.location.href = baseUrl.toString();
-		}
-
 		// Cargar identificaciones al cargar la página
 		document.addEventListener("DOMContentLoaded", cargarIdentificaciones);
 		document.addEventListener("DOMContentLoaded", cargarQueryParams);
 
-		// Manejar el envío del formulario de creación
-		document.getElementById("crearIdentificacionForm").addEventListener("submit", async (e) => {
-			e.preventDefault();
-			const titulo = document.getElementById("titulo").value;
-			const nombreUsuario = document.getElementById("nombre").value;
-			const correoUsuario = document.getElementById("email").value;
-			const documentoUsuario = document.getElementById("documentoUsuario").value;
-
-			try {
-				const response = await fetch(`${DOMINIO}/crear-identificacion`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario, documentoUsuario })
-				});
-
-				if (!response.ok) {
-					throw new Error("Error al crear la identificación");
-				}
-
-				const data = await response.json();
-				mostrarMensaje("mensajeCrear", "Identificación creada exitosamente", "success");
-				document.getElementById("crearIdentificacionForm").reset();
-				// Recargar la lista de identificaciones
-				await cargarIdentificaciones();
-			} catch (error) {
-				console.error("Error:", error);
-				mostrarMensaje("mensajeCrear", error.message, "error");
+		// Manejar cuando se selecciona un token
+		document.getElementById("identificacionSeleccionada").addEventListener("change", (e) => {
+			const token = e.target.value;
+			if (!token) {
+				return;
 			}
+			document.getElementById("tokenId").value = token;
+		});
+
+		// Manejar cuando se ingresa un token manualmente
+		document.getElementById("tokenId").addEventListener("keydown", (e) => {
+			const select = document.getElementById("identificacionSeleccionada");
+			select.selectedIndex = 0;
+			select.options[0].text = "Token manual";
 		});
 
 		// Manejar el envío del formulario de selección
 		document.getElementById("seleccionarIdentificacionForm").addEventListener("submit", async (e) => {
 			e.preventDefault();
-			const token = document.getElementById("identificacionSeleccionada").value;
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+			
+			// Obtener el token seleccionado
+			const token = document.getElementById("tokenId").value;
 			if (!token) {
-				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione una identificación", "error");
+				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione un contrato", "error");
+				buttonSubmit.disabled = false;
 				return;
 			}
+
 			// Cargar el widget con el token seleccionado
 			cargarWidget(token);
 			mostrarMensaje("mensajeSeleccionar", "Redirigiendo a Keynua...", "success");
+			buttonSubmit.disabled = false;
 		});
 
 		function mostrarMensaje(elementId, mensaje, tipo) {

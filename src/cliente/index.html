@@ -12,28 +12,65 @@
 			padding: 20px;
 		}
 		ul {
-			list-style-type: disc;
-			padding-left: 20px;
+			list-style-type: none;
+			padding-left: 0;
 		}
 		li {
-			margin: 10px 0;
+			margin: 20px 0;
+			padding: 15px;
+			border: 1px solid #ddd;
+			border-radius: 5px;
+			background-color: #f9f9f9;
 		}
 		a {
 			color: #0066cc;
 			text-decoration: none;
+			font-weight: bold;
+			font-size: 1.1em;
 		}
 		a:hover {
 			text-decoration: underline;
+		}
+		.description {
+			margin-top: 8px;
+			color: #666;
+			font-size: 0.9em;
+			line-height: 1.4;
 		}
 	</style>
 </head>
 <body>
 	<h1>Ejemplos Keynua</h1>
 	<ul>
-		<li><a href="01-contratos-uicallback.html">01. Keynua - Contratos - uiCallback</a></li>
-		<li><a href="02-identificaciones-uicallback.html">02. Keynua - Identificaciones - uiCallback</a></li>
-		<li><a href="03-identificaciones-eventurl.html">03. Keynua - Identificaciones - eventURL</a></li>
-		<li><a href="04-contratos-theme.html">04. Keynua - Contratos - theme</a></li>
+		<li>
+			<a href="01-contratos-uicallback.html">01. Keynua - Contratos - uiCallback</a>
+			<div class="description">
+				Ejemplo de integración de contratos utilizando el parametro uiCallback. Este parametro permite recibir eventos en tiempo real del widget de Keynua, mostrando los eventos en la misma página. Permite monitorear en tiempo real el progreso de la firma de un contrato.
+			</div>
+		</li>
+		<li>
+			<a href="02-identificaciones-uicallback.html">02. Keynua - Identificaciones - uiCallback</a>
+			<div class="description">
+				Ejemplo de integración de identificaciones utilizando el parametro uiCallback. Similar al ejemplo de contratos, pero enfocado en el proceso de identificación de usuarios. Permite monitorear en tiempo real el progreso de la identificación.
+			</div>
+		</li>
+		<li>
+			<a href="03-identificaciones-eventurl.html">03. Keynua - Identificaciones - eventURL</a>
+			<div class="description">
+				Ejemplo de integración de identificaciones redirigiendo a una URL con los parametros eventDoneURL y eventErrorURL.
+				Este metodo es ideal cuando no se requiere monitorear en tiempo real el progreso de la identificación y que se firme
+				dentro de la pagina de keynua redirigiendo en caso de error o de exito (Pulsando el boton de finalizar).
+			</div>
+		</li>
+		<li>
+			<a href="04-contratos-theme.html">04. Keynua - Contratos - theme</a>
+			<div class="description">
+				Ejemplo de integración de contratos con personalización de tema. Puede editar las variables keynuaTheme y 
+				keynuaPrimitives para cambiar el estilo del Widget. También puede modificarlos de manera interactiva por la web.
+				<br/>
+				NOTA: los estilos son generados a partir de la configuracion de la organizacion en keynua, que genera los "primitives" y estos generan el "theme".
+			</div>
+		</li>
 	</ul>
 </body>
 </html>

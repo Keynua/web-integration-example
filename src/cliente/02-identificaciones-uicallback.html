@@ -21,6 +21,9 @@
 		.form-group {
 			margin-bottom: 15px;
 		}
+		h2 {
+			margin-top: 0;
+		}
 		label {
 			display: block;
 			margin-bottom: 5px;
@@ -42,6 +45,10 @@
 		}
 		button:hover {
 			background-color: #45a049;
+		}
+		button:disabled {
+			background-color: #ccc;
+			cursor: not-allowed;
 		}
 		.message {
 			margin-top: 10px;
@@ -87,12 +94,43 @@
 			white-space: pre-wrap;
 			word-wrap: break-word;
 		}
+		.description {
+			margin-top: 20px;
+			margin-bottom: 20px;
+			color: #666;
+			font-size: 0.9em;
+			line-height: 1.4;
+		}
+		.description ul {
+			list-style: none;
+			padding-left: 0;
+			margin: 0;
+		}
+		.description li {
+			position: relative;
+			padding-left: 20px;
+			margin-bottom: 0px;
+		}
+		.description li:before {
+			content: "-";
+			position: absolute;
+			left: 0;
+		}
 	</style>
 </head>
 <body>
-	<ul><li><a href="Index.html">Inicio</a></li></ul>
+	<h1>02. Keynua - Identificaciones - uiCallback</h1>
+	<p><a href="Index.html">volver</a></p>
+
 	<div class="form-container">
-		<h2>Crear Nueva Identificación</h2>
+		<h2>A. Crear Nueva Identificación</h2>
+		<div class="description">
+			<ul>
+				<li>Crea una nueva identificación simple.</li>
+				<li>Para el front, revisa la función <span class="code">document.getElementById("crearIdentificacionForm").addEventListener("submit", "</span></li>
+				<li>Para el back, revisa la función <span class="code">module.exports.crearIdentificacion = async function crearIdentificacion(req, res) {</span></li>
+			</ul>
+		</div>
 		<form id="crearIdentificacionForm">
 			<div class="form-group">
 				<label for="titulo">Título de la Identificación:</label>
@@ -116,13 +154,25 @@
 	</div>
 
 	<div class="form-container">
-		<h2>Seleccionar Identificación</h2>
+		<h2>B. Seleccionar Identificación</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se puede seleccionar una identificación ya creada.</li>
+				<li>Para seleccionar una identificación, se debe pulsar el botón "Seleccionar Identificación".</li>
+				<li>Si no se encuentra la identificación en la lista, se puede ingresar el token manualmente.</li>
+				<li>Una vez presionado el botón se cargará el widget en la sección de abajo.</li>
+			</ul>
+		</div>
 		<form id="seleccionarIdentificacionForm">
 			<div class="form-group">
 				<label for="identificacionSeleccionada">Identificaciones Disponibles:</label>
-				<select id="identificacionSeleccionada" name="identificacionSeleccionada" required>
+				<select id="identificacionSeleccionada" name="identificacionSeleccionada">
 					<option value="">Seleccione una identificación</option>
 				</select>
+			</div>
+			<div class="form-group">
+				<label for="tokenId">Ingresa el token manualmente:</label>
+				<input type="text" id="tokenId" name="tokenId" value="" required>
 			</div>
 			<button type="submit">Seleccionar Identificación</button>
 		</form>
@@ -134,6 +184,14 @@
 	</div>
 
 	<div class="form-container">
+		<h2>C. Eventos del Widget</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se listan los eventos que se reciben del widget.</li>
+				<li>Cada vez que se emite un evento, se actualiza el menú desplegable y se muestra el JSON del evento en el área de texto.</li>
+				<li>Puede seleccionar eventos pasados usando el menú desplegable.</li>
+			</ul>
+		</div>
 		<div class="events-container">
 			<div class="events-header">
 				<h3>Eventos del Widget</h3>
@@ -147,6 +205,80 @@
 
 	<script>
 		const DOMINIO = "https://localhost:443";
+
+		// Manejar el envío del formulario de creación
+		document.getElementById("crearIdentificacionForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+			const titulo = document.getElementById("titulo").value;
+			const nombreUsuario = document.getElementById("nombre").value;
+			const correoUsuario = document.getElementById("email").value;
+			const documentoUsuario = document.getElementById("documentoUsuario").value;
+
+			try {
+				const response = await fetch(`${DOMINIO}/crear-identificacion`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario, documentoUsuario }),
+				});
+
+				if (!response.ok) {
+					throw new Error("Error al crear la identificación");
+				}
+
+				const data = await response.json();
+				mostrarMensaje("mensajeCrear", "Identificación creada exitosamente", "success");
+				document.getElementById("crearIdentificacionForm").reset();
+				// Recargar la lista de identificaciones
+				await cargarIdentificaciones();
+				buttonSubmit.disabled = false;
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeCrear", error.message, "error");
+				buttonSubmit.disabled = false;
+			}
+		});
+
+		// Función para cargar el Widget de Keynua
+		function cargarWidget(token) {
+			const widgetContainer = document.getElementsByClassName("widget-container")[0];
+			
+			if (!window.Keynua) {
+				mostrarMensaje("mensajeSeleccionar", "Error al cargar el widget", "error");
+				return;
+			}
+
+			// Limpiar eventos anteriores
+			eventos = [];
+			actualizarDropdownEventos();
+			document.getElementById("eventoJson").textContent = "No hay eventos disponibles";
+
+			window.Keynua.run({
+				token: token,
+				widgetContainerId: 'widget-container',
+				uiCallback: (ev) => {
+					// Agregar el evento al inicio del array
+					eventos.unshift(ev);
+					// Actualizar el dropdown
+					actualizarDropdownEventos();
+					// Mostrar el evento más reciente
+					mostrarEventoJson(ev);
+					// Seleccionar el evento más reciente en el dropdown
+					document.getElementById("eventosDropdown").value = "0";
+				}
+			});
+		}
+
+		/**
+		 * ==============================
+		 * A partir de aqui son funciones auxiliares para el manejo y el buen
+		 * funcionamiento del ejemplo. No es necesario que se tengan en cuenta
+		 * para la integración con Keynua.
+		 * ==============================
+		 */
 		let identificaciones = [];
 		let eventos = [];
 
@@ -210,82 +342,43 @@
 			pre.textContent = JSON.stringify(evento, null, 2);
 		}
 
-		// Función para cargar el Widget de Keynua
-		function cargarWidget(token) {
-			const widgetContainer = document.getElementsByClassName("widget-container")[0];
-			
-			if (!window.Keynua) {
-				mostrarMensaje("mensajeSeleccionar", "Error al cargar el widget", "error");
-				return;
-			}
-
-			// Limpiar eventos anteriores
-			eventos = [];
-			actualizarDropdownEventos();
-			document.getElementById("eventoJson").textContent = "No hay eventos disponibles";
-
-			window.Keynua.run({
-				token: token,
-				widgetContainerId: 'widget-container',
-				uiCallback: (ev) => {
-					// Agregar el evento al inicio del array
-					eventos.unshift(ev);
-					// Actualizar el dropdown
-					actualizarDropdownEventos();
-					// Mostrar el evento más reciente
-					mostrarEventoJson(ev);
-					// Seleccionar el evento más reciente en el dropdown
-					document.getElementById("eventosDropdown").value = "0";
-				}
-			});
-		}
-
 		// Cargar identificaciones al cargar la página
 		document.addEventListener("DOMContentLoaded", cargarIdentificaciones);
 
-		// Manejar el envío del formulario de creación
-		document.getElementById("crearIdentificacionForm").addEventListener("submit", async (e) => {
-			e.preventDefault();
-			const titulo = document.getElementById("titulo").value;
-			const nombreUsuario = document.getElementById("nombre").value;
-			const correoUsuario = document.getElementById("email").value;
-			const documentoUsuario = document.getElementById("documentoUsuario").value;
-
-			try {
-				const response = await fetch(`${DOMINIO}/crear-identificacion`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario, documentoUsuario }),
-				});
-
-				if (!response.ok) {
-					throw new Error("Error al crear la identificación");
-				}
-
-				const data = await response.json();
-				mostrarMensaje("mensajeCrear", "Identificación creada exitosamente", "success");
-				document.getElementById("crearIdentificacionForm").reset();
-				// Recargar la lista de identificaciones
-				await cargarIdentificaciones();
-			} catch (error) {
-				console.error("Error:", error);
-				mostrarMensaje("mensajeCrear", error.message, "error");
+		// Manejar cuando se selecciona un token
+		document.getElementById("identificacionSeleccionada").addEventListener("change", (e) => {
+			const token = e.target.value;
+			if (!token) {
+				return;
 			}
+			document.getElementById("tokenId").value = token;
+		});
+
+		// Manejar cuando se ingresa un token manualmente
+		document.getElementById("tokenId").addEventListener("keydown", (e) => {
+			const select = document.getElementById("identificacionSeleccionada");
+			select.selectedIndex = 0;
+			select.options[0].text = "Token manual";
 		});
 
 		// Manejar el envío del formulario de selección
 		document.getElementById("seleccionarIdentificacionForm").addEventListener("submit", async (e) => {
 			e.preventDefault();
-			const token = document.getElementById("identificacionSeleccionada").value;
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+			
+			// Obtener el token seleccionado
+			const token = document.getElementById("tokenId").value;
 			if (!token) {
-				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione una identificación", "error");
+				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione un contrato", "error");
+				buttonSubmit.disabled = false;
 				return;
 			}
+
 			// Cargar el widget con el token seleccionado
 			cargarWidget(token);
 			mostrarMensaje("mensajeSeleccionar", "Widget cargado exitosamente", "success");
+			buttonSubmit.disabled = false;
 		});
 
 		// Manejar cambios en el dropdown de eventos

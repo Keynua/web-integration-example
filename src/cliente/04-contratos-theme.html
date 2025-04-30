@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Keynua - Contratos - uiCallback</title>
+	<title>Keynua - Contratos - theme</title>
 	<script src="https://sign.stg.keynua.com/widgets/widget.js"></script>
 	<style>
 		body {
@@ -20,6 +20,9 @@
 		}
 		.form-group {
 			margin-bottom: 15px;
+		}
+		h2 {
+			margin-top: 0;
 		}
 		label {
 			display: block;
@@ -42,6 +45,15 @@
 		}
 		button:hover {
 			background-color: #45a049;
+		}
+		button:disabled {
+			background-color: #ccc;
+			cursor: not-allowed;
+		}
+		.code {
+			background-color: #f5f5f5;
+			font-style: italic;
+			font-family: monospace;
 		}
 		.message {
 			margin-top: 10px;
@@ -87,12 +99,217 @@
 			white-space: pre-wrap;
 			word-wrap: break-word;
 		}
+		.primitives-container, .theme-container {
+			margin-top: 20px;
+			padding: 15px;
+			border: 1px solid #ddd;
+			border-radius: 5px;
+			background-color: #f9f9f9;
+		}
+		.primitives-header, .theme-header {
+			display: flex;
+			align-items: center;
+			margin-bottom: 15px;
+			gap: 10px;
+		}
+		.primitives-header h3, .theme-header h3 {
+			flex: 0 0 auto;
+			margin: 0;
+		}
+		.primitives-header input[type="checkbox"], .theme-header input[type="checkbox"] {
+			width: auto;
+			margin: 0;
+			flex: 0 0 auto;
+		}
+		.primitives-header button, .theme-header button {
+			flex: 0 0 auto;
+		}
+		.primitives-actions {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+		}
+		.primitives-save {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+			margin-top: 10px;
+			padding: 10px;
+			background-color: #f5f5f5;
+			border-radius: 4px;
+		}
+		.primitives-save input {
+			flex: 1;
+			padding: 8px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+		}
+		.primitives-save button {
+			padding: 8px 16px;
+			background-color: #4CAF50;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+		.primitives-save button:hover {
+			background-color: #45a049;
+		}
+		.primitives-dropdown {
+			padding: 8px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			background-color: white;
+			cursor: pointer;
+			width: 100%;
+		}
+		.primitives-list, .theme-list {
+			max-height: 400px;
+			overflow-y: auto;
+		}
+		.primitive-item {
+			margin-bottom: 4px;
+		}
+		.item-content {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 4px 0;
+		}
+		.primitive-item.disabled {
+			opacity: 0.5;
+			background-color: #f5f5f5;
+		}
+		.primitive-item.collapsed button.toggle-button::after {
+			transform: rotate(-90deg);
+		}
+		.primitive-item.collapsed div.children-container {
+			display: none;
+		}
+		
+		.primitive-item label {
+			margin: 0;
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			flex-grow: 1;
+		}
+		.primitive-item input[type="checkbox"] {
+			margin: 0;
+			width: auto;
+		}
+		.primitive-item .key {
+			font-weight: normal;
+		}
+		.primitive-item .value {
+			color: #666;
+		}
+		.toggle-button {
+			background: none;
+			border: none;
+			cursor: pointer;
+			padding: 4px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 24px;
+			height: 24px;
+			color: #666;
+		}
+		.toggle-button:hover {
+			background-color: rgba(0,0,0,0.05);
+			border-radius: 4px;
+		}
+		.toggle-button::after {
+			content: "▼";
+			font-size: 12px;
+			transition: transform 0.2s ease;
+		}
+		.children-container {
+			margin-left: 24px;
+			border-left: 1px solid #eee;
+			padding-left: 8px;
+		}
+		.primitives-json, .theme-json {
+			max-height: 400px;
+			overflow-y: auto;
+			background-color: #fff;
+			padding: 15px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			font-family: monospace;
+			font-size: 14px;
+			line-height: 1.5;
+		}
+		.toggle-view-button {
+			margin-left: auto;
+			background-color: #4A40FF;
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 14px;
+			transition: background-color 0.2s ease;
+			min-width: 140px;
+		}
+		.toggle-view-button:hover {
+			background-color: #2B22B6;
+		}
+		.primitive-item.level-1 {
+			padding-left: 24px;
+		}
+		.primitive-item.level-2 {
+			padding-left: 48px;
+		}
+		.primitive-item.level-3 {
+			padding-left: 72px;
+		}
+		.primitive-item.level-4 {
+			padding-left: 96px;
+		}
+		.primitive-item.level-5 {
+			padding-left: 120px;
+		}
+		.description {
+			margin-top: 20px;
+			margin-bottom: 20px;
+			color: #666;
+			font-size: 0.9em;
+			line-height: 1.4;
+		}
+		.description ul {
+			list-style: none;
+			padding-left: 0;
+			margin: 0;
+		}
+		.description li {
+			position: relative;
+			padding-left: 20px;
+			margin-bottom: 0px;
+		}
+		.description li:before {
+			content: "-";
+			position: absolute;
+			left: 0;
+		}
 	</style>
 </head>
 <body>
-	<ul><li><a href="Index.html">Inicio</a></li></ul>
+	<h1>04. Keynua - Contratos - theme</h1>
+	<p><a href="Index.html">volver</a></p>
+
 	<div class="form-container">
-		<h2>Crear Nuevo Contrato</h2>
+		<h2>A. Crear nuevo contrato</h2>
+		<div class="description">
+			<ul>
+				<li>Crea un nuevo contrato simple.</li>
+				<li>Para el front, revisa la función <span class="code">document.getElementById("crearContratoForm").addEventListener("submit", "</span></li>
+				<li>Para el back, revisa la función <span class="code">module.exports.crearContrato = async function crearContrato(req, res) {</span></li>
+			</ul>
+		</div>
 		<form id="crearContratoForm">
 			<div class="form-group">
 				<label for="titulo">Título del Contrato:</label>
@@ -112,13 +329,60 @@
 	</div>
 
 	<div class="form-container">
-		<h2>Seleccionar Contrato</h2>
+		<h2>B. Selecciona los estilos del widget</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se pueden ver los primitives y el theme por defecto del Widget.</li>
+				<li>Mediante los checkboxes se puede habilitar/deshabilitar la visualización de cada uno y de todo el componente.</li>
+				<li>Al apretar las flechas se puede expandir/contraer el árbol de primitives y theme.</li>
+				<li>Para mostrar el JSON de los primitives y el theme, se debe pulsar el botón "Mostrar JSON".</li>
+				<li>Para aplicar los cambios, se debe pulsar el botón "Seleccionar Contrato" de la sección de selección de contratos.</li>
+				<li>Para volver a la sección de creación de contratos, se debe pulsar el botón "volver" de la sección de selección de contratos.</li>
+				<li>Cuando se habilitan los primitives, no se utilizan los valores por defecto de la organización.</li>
+				<li>Los primitives sirven para generar los valores del theme que no se han definido. Por lo tanto, al habilitar alguno de estos valores, tendrán prioridad sobre los primitives.</li>
+			</ul>
+		</div>
+		<div class="primitives-container">
+			<div class="primitives-header">
+				<input type="checkbox" id="togglePrimitivesCheckbox" checked/>
+				<h3>Keynua Primitives</h3>
+				<button id="toggleViewButton" class="toggle-view-button">Mostrar JSON</button>
+			</div>
+			<div class="primitives-list" id="primitivesList"></div>
+			<pre id="primitivesJson" class="primitives-json" style="display: none;"></pre>
+		</div>
+
+		<div class="theme-container">
+			<div class="theme-header">
+				<input type="checkbox" id="toggleThemeCheckbox" checked/>
+				<h3>Keynua Theme</h3>
+				<button id="toggleThemeViewButton" class="toggle-view-button">Mostrar JSON</button>
+			</div>
+			<div class="theme-list" id="themeList"></div>
+			<pre id="themeJson" class="theme-json" style="display: none;"></pre>
+		</div>
+	</div>
+
+	<div class="form-container">
+		<h2>C. Seleccionar contrato</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se puede seleccionar un contrato ya creado.</li>
+				<li>Para seleccionar un contrato, se debe pulsar el botón "Seleccionar Contrato".</li>
+				<li>Si no se encuentra el contrato en la lista, se puede ingresar el token manualmente.</li>
+				<li>Una vez presionado el botón se cargará el widget en la sección de abajo.</li>
+			</ul>
+		</div>
 		<form id="seleccionarContratoForm">
 			<div class="form-group">
 				<label for="contratoSeleccionado">Contratos Disponibles:</label>
-				<select id="contratoSeleccionado" name="contratoSeleccionado" required>
+				<select id="contratoSeleccionado" name="contratoSeleccionado">
 					<option value="">Seleccione un contrato</option>
 				</select>
+			</div>
+			<div class="form-group">
+				<label for="tokenId">Ingresa el token manualmente:</label>
+				<input type="text" id="tokenId" name="tokenId" value="" required>
 			</div>
 			<button type="submit">Seleccionar Contrato</button>
 		</form>
@@ -130,9 +394,16 @@
 	</div>
 
 	<div class="form-container">
+		<h2>D. Eventos del Widget</h2>
+		<div class="description">
+			<ul>
+				<li>En esta sección se listan los eventos que se reciben del widget.</li>
+				<li>Cada vez que se emite un evento, se actualiza el menú desplegable y se muestra el JSON del evento en el área de texto.</li>
+				<li>Puede seleccionar eventos pasados usando el menú desplegable.</li>
+			</ul>
+		</div>
 		<div class="events-container">
 			<div class="events-header">
-				<h3>Eventos del Widget</h3>
 				<select id="eventosDropdown" class="events-select">
 					<option value="">Seleccione un evento</option>
 				</select>
@@ -143,8 +414,6 @@
 
 	<script>
 		const DOMINIO = "https://localhost:443";
-		let contratos = [];
-		let eventos = [];
 
 		const keynuaTheme = {
 			"reset": {
@@ -1773,6 +2042,488 @@
 			}
 		};
 
+		// Manejar el envío del formulario de creación
+		document.getElementById("crearContratoForm").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+			const titulo = document.getElementById("titulo").value;
+			const nombreUsuario = document.getElementById("nombre").value;
+			const correoUsuario = document.getElementById("email").value;
+
+			try {
+				const response = await fetch(`${DOMINIO}/crear-contrato`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario })
+				});
+
+				if (!response.ok) {
+					throw new Error("Error al crear el contrato");
+				}
+
+				const data = await response.json();
+				mostrarMensaje("mensajeCrear", "Contrato creado exitosamente", "success");
+				document.getElementById("crearContratoForm").reset();
+				// Recargar la lista de contratos
+				await cargarContratos();
+				buttonSubmit.disabled = false;
+			} catch (error) {
+				console.error("Error:", error);
+				mostrarMensaje("mensajeCrear", error.message, "error");
+				buttonSubmit.disabled = false;
+			}
+		});
+
+		// Función para cargar el Widget de Keynua
+		function cargarWidget(token) {
+			const widgetContainer = document.getElementsByClassName("widget-container")[0];
+			
+			if (!window.Keynua) {
+				mostrarMensaje("mensajeSeleccionar", "Error al cargar el widget", "error");
+				return;
+			}
+
+			// Limpiar eventos anteriores
+			eventos = [];
+			actualizarDropdownEventos();
+			document.getElementById("eventoJson").textContent = "No hay eventos disponibles";
+
+			// Obtiene los primitives y el theme
+			let runPrimitives; 
+			if (document.getElementById("togglePrimitivesCheckbox").checked) {
+				runPrimitives = getFilteredJson();
+			}
+			let runThemes; 
+			if (document.getElementById("toggleThemeCheckbox").checked) {
+				runThemes = getFilteredThemeJson();
+			}
+
+			// Ejecuta el widget
+			window.Keynua.run({
+				token: token,
+				widgetContainerId: "widget-container",
+				autoRefresh: 30, // 30 segundos, refresca al completar
+				cameraFullScreen: false,    // imageinput, videoinput (No livenessinput)
+				documentsFullScreen: false, // documentos
+				signatureFullScreen: false, // imagesign
+				primitives: runPrimitives, // base
+				theme: runThemes, // tema (sobrescribe la base/primitives)
+				uiCallback: (ev) => {
+					// Agregar el evento al inicio del array
+					eventos.unshift(ev);
+					// Actualizar el dropdown
+					actualizarDropdownEventos();
+					// Mostrar el evento más reciente
+					mostrarEventoJson(ev);
+					// Seleccionar el evento más reciente en el dropdown
+					document.getElementById("eventosDropdown").value = "0";
+				}
+			});
+		}
+
+		/**
+		 * ==============================
+		 * A partir de aqui son funciones auxiliares para el manejo y el buen
+		 * funcionamiento del ejemplo. No es necesario que se tengan en cuenta
+		 * para la integración con Keynua.
+		 * ==============================
+		 */
+		let contratos = [];
+		let eventos = [];
+
+		// Función para renderizar los primitives
+		function renderizarPrimitives() {
+			const container = document.getElementById("primitivesList");
+			container.innerHTML = "";
+
+			function toggleChildren(parentKey, isChecked) {
+				// Función recursiva para procesar los hijos
+				function processChildren(currentKey) {
+					const children = Array.from(container.querySelectorAll(`.primitive-item[data-parent-key="${currentKey}"]`));
+					children.forEach(child => {
+						// Actualizar el estado del elemento
+						child.classList.toggle("disabled", !isChecked);
+						const checkbox = child.querySelector('input[type="checkbox"]');
+						if (checkbox) {
+							checkbox.checked = isChecked;
+						}
+						// Procesar recursivamente los hijos de este elemento
+						processChildren(child.dataset.key);
+					});
+				}
+
+				processChildren(parentKey);
+			}
+
+			function enableParents(childElement) {
+				let currentElement = childElement;
+				while (currentElement) {
+					// Obtener la clave del padre
+					const parentKey = currentElement.dataset.parentKey;
+					if (!parentKey) break;
+
+					// Encontrar el elemento padre
+					const parentElement = container.querySelector(`.primitive-item[data-key="${parentKey}"]`);
+					if (!parentElement) break;
+
+					// Activar el padre
+					parentElement.classList.remove("disabled");
+					const parentCheckbox = parentElement.querySelector('input[type="checkbox"]');
+					if (parentCheckbox) {
+						parentCheckbox.checked = true;
+					}
+
+					// Continuar con el siguiente padre
+					currentElement = parentElement;
+				}
+			}
+
+			function renderItem(key, value, level = 0, parentKey = null) {
+				const itemDiv = document.createElement("div");
+				itemDiv.className = `primitive-item collapsed level-${level}`;
+				itemDiv.dataset.key = key;
+				if (parentKey !== null) {
+					itemDiv.dataset.parentKey = parentKey;
+				}
+
+				const itemContent = document.createElement("div");
+				itemContent.className = "item-content";
+
+				const itemCheckbox = document.createElement("input");
+				itemCheckbox.type = "checkbox";
+				itemCheckbox.checked = true;
+				itemCheckbox.dataset.key = key;
+				itemCheckbox.addEventListener("change", (e) => {
+					const isChecked = e.target.checked;
+					const item = e.target.closest(".primitive-item");
+					const key = item.dataset.key;
+					
+					// Deshabilitar el elemento actual
+					item.classList.toggle("disabled", !isChecked);
+					
+					if (isChecked) {
+						// Si se está activando, propagar hacia arriba y hacia abajo
+						enableParents(item);
+						toggleChildren(key, true);
+					} else {
+						// Si se está desactivando, propagar hacia abajo
+						toggleChildren(key, false);
+					}
+				});
+
+				const itemLabel = document.createElement("label");
+				
+				if (typeof value === "object" && value !== null) {
+					// Crear el botón de toggle solo para elementos con hijos
+					const toggleButton = document.createElement("button");
+					toggleButton.className = "toggle-button";
+					toggleButton.type = "button";
+					toggleButton.addEventListener("click", () => {
+						const isCollapsed = itemDiv.classList.toggle("collapsed");
+					});
+
+					itemLabel.textContent = key;
+					itemContent.appendChild(itemCheckbox);
+					itemContent.appendChild(toggleButton);
+					itemContent.appendChild(itemLabel);
+					itemDiv.appendChild(itemContent);
+
+					// Crear contenedor para los hijos
+					const childrenContainer = document.createElement("div");
+					childrenContainer.className = "children-container";
+					
+					// Renderizar hijos y añadirlos al contenedor de hijos
+					Object.entries(value).forEach(([childKey, childValue]) => {
+						const childItem = renderItem(childKey, childValue, level + 1, key);
+						childrenContainer.appendChild(childItem);
+					});
+
+					itemDiv.appendChild(childrenContainer);
+					return itemDiv;
+				} else {
+					const keySpan = document.createElement("span");
+					keySpan.className = "key";
+					keySpan.textContent = key + ": ";
+					
+					const valueSpan = document.createElement("input");
+					valueSpan.type = "text";
+					valueSpan.className = "value";
+					valueSpan.value = typeof value === "string" ? value : JSON.stringify(value);
+					
+					itemLabel.appendChild(keySpan);
+					itemLabel.appendChild(valueSpan);
+					
+					itemContent.appendChild(itemCheckbox);
+					itemContent.appendChild(itemLabel);
+					itemDiv.appendChild(itemContent);
+					return itemDiv;
+				}
+			}
+
+			// Renderizar todos los elementos
+			Object.entries(keynuaPrimitives).forEach(([key, value]) => {
+				const fragment = renderItem(key, value);
+				container.appendChild(fragment);
+			});
+
+			// Deshabilitar todos los primitives
+			Array.from(container.children).forEach(child => {
+				child.querySelector('input[type="checkbox"]').click();
+			});
+		}
+
+		// Función para renderizar el theme
+		function renderizarTheme() {
+			const container = document.getElementById("themeList");
+			container.innerHTML = "";
+
+			function toggleChildren(parentKey, isChecked) {
+				// Función recursiva para procesar los hijos
+				function processChildren(currentKey) {
+					const children = Array.from(container.querySelectorAll(`.primitive-item[data-parent-key="${currentKey}"]`));
+					children.forEach(child => {
+						// Actualizar el estado del elemento
+						child.classList.toggle("disabled", !isChecked);
+						const checkbox = child.querySelector('input[type="checkbox"]');
+						if (checkbox) {
+							checkbox.checked = isChecked;
+						}
+						// Procesar recursivamente los hijos de este elemento
+						processChildren(child.dataset.key);
+					});
+				}
+
+				processChildren(parentKey);
+			}
+
+			function enableParents(childElement) {
+				let currentElement = childElement;
+				while (currentElement) {
+					// Obtener la clave del padre
+					const parentKey = currentElement.dataset.parentKey;
+					if (!parentKey) break;
+
+					// Encontrar el elemento padre
+					const parentElement = container.querySelector(`.primitive-item[data-key="${parentKey}"]`);
+					if (!parentElement) break;
+
+					// Activar el padre
+					parentElement.classList.remove("disabled");
+					const parentCheckbox = parentElement.querySelector('input[type="checkbox"]');
+					if (parentCheckbox) {
+						parentCheckbox.checked = true;
+					}
+
+					// Continuar con el siguiente padre
+					currentElement = parentElement;
+				}
+			}
+
+			function renderItem(key, value, level = 0, parentKey = null) {
+				const itemDiv = document.createElement("div");
+				itemDiv.className = `primitive-item collapsed level-${level}`;
+				itemDiv.dataset.key = key;
+				if (parentKey !== null) {
+					itemDiv.dataset.parentKey = parentKey;
+				}
+
+				const itemContent = document.createElement("div");
+				itemContent.className = "item-content";
+
+				const itemCheckbox = document.createElement("input");
+				itemCheckbox.type = "checkbox";
+				itemCheckbox.checked = true;
+				itemCheckbox.dataset.key = key;
+				itemCheckbox.addEventListener("change", (e) => {
+					const isChecked = e.target.checked;
+					const item = e.target.closest(".primitive-item");
+					const key = item.dataset.key;
+					
+					// Deshabilitar el elemento actual
+					item.classList.toggle("disabled", !isChecked);
+					
+					if (isChecked) {
+						// Si se está activando, propagar hacia arriba y hacia abajo
+						enableParents(item);
+						toggleChildren(key, true);
+					} else {
+						// Si se está desactivando, propagar hacia abajo
+						toggleChildren(key, false);
+					}
+				});
+
+				const itemLabel = document.createElement("label");
+				
+				if (typeof value === "object" && value !== null) {
+					// Crear el botón de toggle solo para elementos con hijos
+					const toggleButton = document.createElement("button");
+					toggleButton.className = "toggle-button";
+					toggleButton.type = "button";
+					toggleButton.addEventListener("click", () => {
+						const isCollapsed = itemDiv.classList.toggle("collapsed");
+					});
+
+					itemLabel.textContent = key;
+					itemContent.appendChild(itemCheckbox);
+					itemContent.appendChild(toggleButton);
+					itemContent.appendChild(itemLabel);
+					itemDiv.appendChild(itemContent);
+
+					// Crear contenedor para los hijos
+					const childrenContainer = document.createElement("div");
+					childrenContainer.className = "children-container";
+					
+					// Renderizar hijos y añadirlos al contenedor de hijos
+					Object.entries(value).forEach(([childKey, childValue]) => {
+						const childItem = renderItem(childKey, childValue, level + 1, key);
+						childrenContainer.appendChild(childItem);
+					});
+
+					itemDiv.appendChild(childrenContainer);
+					return itemDiv;
+				} else {
+					const keySpan = document.createElement("span");
+					keySpan.className = "key";
+					keySpan.textContent = key + ": ";
+					
+					const valueSpan = document.createElement("input");
+					valueSpan.type = "text";
+					valueSpan.className = "value";
+					valueSpan.value = typeof value === "string" ? value : JSON.stringify(value);
+					
+					itemLabel.appendChild(keySpan);
+					itemLabel.appendChild(valueSpan);
+					
+					itemContent.appendChild(itemCheckbox);
+					itemContent.appendChild(itemLabel);
+					itemDiv.appendChild(itemContent);
+					return itemDiv;
+				}
+			}
+
+			// Renderizar todos los elementos
+			Object.entries(keynuaTheme).forEach(([key, value]) => {
+				const fragment = renderItem(key, value);
+				container.appendChild(fragment);
+			});
+
+			// Deshabilitar todos los themes
+			Array.from(container.children).forEach(child => {
+				child.querySelector('input[type="checkbox"]').click();
+			});
+		}
+
+		// Función para obtener el JSON filtrado del theme
+		function getFilteredThemeJson() {
+			const root = document.getElementById("themeList");
+			
+			function processElement(element, primitiveObject) {
+				// Si el elemento está deshabilitado, no lo incluimos
+				if (element.classList.contains('disabled')) {
+					return null;
+				}
+
+				// Es array?
+				// Assume all children sorted
+				if (Array.isArray(primitiveObject)) {
+					const arrRes = [];
+					let i = 0;
+
+					// Get children-container and iterate over its children
+					const childrenContainer = element.querySelector(".children-container");
+					Array.from(childrenContainer.children).forEach(child => {
+						if (!child.classList.contains("primitive-item")) {
+							return;
+						}
+						const childResult = processElement(child, primitiveObject[i++]);
+						if (childResult !== null) {
+							arrRes.push(childResult);
+						}
+					});
+					return arrRes;
+				}
+
+				// Es objeto?
+				if (typeof primitiveObject === "object") {
+					const objRes = {};
+					// Get children-container and iterate over its children
+					const childrenContainer = element.querySelector(".children-container");
+					Array.from(childrenContainer.children).forEach(child => {
+						if (!child.classList.contains("primitive-item")) {
+							return;
+						}
+						const childResult = processElement(child, primitiveObject[child.dataset.key]);
+						if (childResult !== null) {
+							objRes[child.dataset.key] = childResult;
+						}
+					});
+					return objRes;
+				}
+
+				// Es string?
+				if (typeof primitiveObject === "string") {
+					const value = element.querySelector("div.item-content input.value").value.trim();
+					// Si el valor está entre comillas, las eliminamos
+					return value.replace(/^"|"$/g, '');
+				}
+
+				// Es number?
+				if (typeof primitiveObject === "number") {
+					return Number(element.querySelector("div.item-content input.value").value.trim());
+				}
+
+				// Es boolean?
+				if (typeof primitiveObject === "boolean") {
+					const val = element.querySelector("div.item-content input.value").value.trim().toLowerCase();
+					return val === "true" || val === "1" || val === "yes" || val === "si";
+				}
+				
+				return {};
+			}
+
+			// Procesar todos los elementos de primer nivel
+			const result = {};
+			const topLevelItems = document.querySelectorAll("#themeList > .primitive-item");
+			
+			topLevelItems.forEach(item => {
+				const itemResult = processElement(item, keynuaTheme[item.dataset.key]);
+				if (itemResult !== null) {
+					result[item.dataset.key] = itemResult;
+				}
+			});
+
+			return result;
+		}
+
+		// Función para alternar entre vistas del theme
+		function toggleThemeView() {
+			const listView = document.getElementById('themeList');
+			const jsonView = document.getElementById('themeJson');
+			const toggleButton = document.getElementById('toggleThemeViewButton');
+			
+			if (listView.style.display !== 'none') {
+				// Cambiar a vista JSON
+				listView.style.display = 'none';
+				jsonView.style.display = 'block';
+				jsonView.textContent = JSON.stringify(getFilteredThemeJson(), null, 2);
+				toggleButton.textContent = 'Modificar JSON';
+			} else {
+				// Cambiar a vista de lista
+				listView.style.display = 'block';
+				jsonView.style.display = 'none';
+				toggleButton.textContent = 'Mostrar JSON';
+			}
+		}
+
+		// Agregar el evento al botón del theme
+		document.addEventListener("DOMContentLoaded", () => {
+			document.getElementById('toggleThemeViewButton').addEventListener('click', toggleThemeView);
+			renderizarTheme();
+		});
+
 		// Función para cargar los contratos
 		async function cargarContratos() {
 			try {
@@ -1833,87 +2584,45 @@
 			pre.textContent = JSON.stringify(evento, null, 2);
 		}
 
-		// Función para cargar el Widget de Keynua
-		function cargarWidget(token) {
-			const widgetContainer = document.getElementsByClassName("widget-container")[0];
-			
-			if (!window.Keynua) {
-				mostrarMensaje("mensajeSeleccionar", "Error al cargar el widget", "error");
-				return;
-			}
-
-			// Limpiar eventos anteriores
-			eventos = [];
-			actualizarDropdownEventos();
-			document.getElementById("eventoJson").textContent = "No hay eventos disponibles";
-
-			window.Keynua.run({
-				token: token,
-				widgetContainerId: "widget-container",
-				autoRefresh: 30, // 30 segundos, refresca al completar
-				cameraFullScreen: false,    // imageinput, videoinput (No livenessinput)
-				documentsFullScreen: false, // documentos
-				signatureFullScreen: false, // imagesign
-				primitives: keynuaPrimitives, // base
-				// theme: keynuaTheme, // tema (sobrescribe la base/primitives)
-				uiCallback: (ev) => {
-					// Agregar el evento al inicio del array
-					eventos.unshift(ev);
-					// Actualizar el dropdown
-					actualizarDropdownEventos();
-					// Mostrar el evento más reciente
-					mostrarEventoJson(ev);
-					// Seleccionar el evento más reciente en el dropdown
-					document.getElementById("eventosDropdown").value = "0";
-				}
-			});
-		}
-
 		// Cargar contratos al cargar la página
 		document.addEventListener("DOMContentLoaded", cargarContratos);
+		document.addEventListener("DOMContentLoaded", renderizarPrimitives);
+		document.addEventListener("DOMContentLoaded", renderizarTheme);
 
-		// Manejar el envío del formulario de creación
-		document.getElementById("crearContratoForm").addEventListener("submit", async (e) => {
-			e.preventDefault();
-			const titulo = document.getElementById("titulo").value;
-			const nombreUsuario = document.getElementById("nombre").value;
-			const correoUsuario = document.getElementById("email").value;
-
-			try {
-				const response = await fetch(`${DOMINIO}/crear-contrato`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({ titulo, nombreUsuario, correoUsuario })
-				});
-
-				if (!response.ok) {
-					throw new Error("Error al crear el contrato");
-				}
-
-				const data = await response.json();
-				mostrarMensaje("mensajeCrear", "Contrato creado exitosamente", "success");
-				document.getElementById("crearContratoForm").reset();
-				// Recargar la lista de contratos
-				await cargarContratos();
-			} catch (error) {
-				console.error("Error:", error);
-				mostrarMensaje("mensajeCrear", error.message, "error");
+		// Manejar cuando se selecciona un token
+		document.getElementById("contratoSeleccionado").addEventListener("change", (e) => {
+			const token = e.target.value;
+			if (!token) {
+				return;
 			}
+			document.getElementById("tokenId").value = token;
 		});
 
+		// Manejar cuando se ingresa un token manualmente
+		document.getElementById("tokenId").addEventListener("keydown", (e) => {
+			const select = document.getElementById("contratoSeleccionado");
+			select.selectedIndex = 0;
+			select.options[0].text = "Token manual";
+		});
+		
 		// Manejar el envío del formulario de selección
 		document.getElementById("seleccionarContratoForm").addEventListener("submit", async (e) => {
 			e.preventDefault();
-			const token = document.getElementById("contratoSeleccionado").value;
+			const buttonSubmit = e.target.querySelector("button[type='submit']");
+			buttonSubmit.disabled = true;
+
+			// Obtener el token seleccionado
+			const token = document.getElementById("tokenId").value;
 			if (!token) {
 				mostrarMensaje("mensajeSeleccionar", "Por favor seleccione un contrato", "error");
+				buttonSubmit.disabled = false;
 				return;
 			}
+
 			// Cargar el widget con el token seleccionado
 			cargarWidget(token);
 			mostrarMensaje("mensajeSeleccionar", "Widget cargado exitosamente", "success");
+			buttonSubmit.disabled = false;
 		});
 
 		// Manejar cambios en el dropdown de eventos
@@ -1930,6 +2639,142 @@
 			elemento.className = `message ${tipo}`;
 			elemento.style.display = "block";
 		}
+
+		// Función para obtener el JSON filtrado
+		function getFilteredJson() {
+			const result = {};
+			const topLevelItems = document.querySelectorAll("#primitivesList > .primitive-item");
+			
+			function processElement(element, primitiveObject) {
+				// Si el elemento está deshabilitado, no lo incluimos
+				if (element.classList.contains('disabled')) {
+					return null;
+				}
+
+				// Es array?
+				// Assume all children sorted
+				if (Array.isArray(primitiveObject)) {
+					const arrRes = [];
+					let i = 0;
+
+					// Get children-container and iterate over its children
+					const childrenContainer = element.querySelector(".children-container");
+					Array.from(childrenContainer.children).forEach(child => {
+						if (!child.classList.contains("primitive-item")) {
+							return;
+						}
+						const childResult = processElement(child, primitiveObject[i++]);
+						if (childResult !== null) {
+							arrRes.push(childResult);
+						}
+					});
+					return arrRes;
+				}
+
+				// Es objeto?
+				if (typeof primitiveObject === "object") {
+					const objRes = {};
+					// Get children-container and iterate over its children
+					const childrenContainer = element.querySelector(".children-container");
+					Array.from(childrenContainer.children).forEach(child => {
+						if (!child.classList.contains("primitive-item")) {
+							return;
+						}
+						const childResult = processElement(child, primitiveObject[child.dataset.key]);
+						if (childResult !== null) {
+							objRes[child.dataset.key] = childResult;
+						}
+					});
+					return objRes;
+				}
+
+				// Es string?
+				if (typeof primitiveObject === "string") {
+					const value = element.querySelector("div.item-content input.value").value.trim();
+					// Si el valor está entre comillas, las eliminamos
+					return value.replace(/^"|"$/g, '');
+				}
+
+				// Es number?
+				if (typeof primitiveObject === "number") {
+					return Number(element.querySelector("div.item-content input.value").value.trim());
+				}
+
+				// Es boolean?
+				if (typeof primitiveObject === "boolean") {
+					const val = element.querySelector("div.item-content input.value").value.trim().toLowerCase();
+					return val === "true" || val === "1" || val === "yes" || val === "si";
+				}
+				
+				// const key = element.dataset.key;
+				return {};
+				// const childrenContainer = element.querySelector('.children-container');
+				
+				// // Si tiene contenedor de hijos, es un objeto
+				// if (childrenContainer) {
+				// 	const result = {};
+				// 	const children = childrenContainer.querySelectorAll('.primitive-item');
+					
+				// 	children.forEach(child => {
+				// 		const childResult = processElement(child);
+				// 		if (childResult !== null) {
+				// 			result[child.dataset.key] = childResult;
+				// 		}
+				// 	});
+					
+				// 	// Solo devolvemos el objeto si tiene propiedades
+				// 	return Object.keys(result).length > 0 ? result : null;
+				// } 
+				// // Si no tiene contenedor de hijos, es un valor
+				// else {
+				// 	const valueSpan = element.querySelector('.value');
+				// 	if (valueSpan) {
+				// 		try {
+				// 			// Intentar parsear el valor JSON
+				// 			return JSON.parse(valueSpan.textContent);
+				// 		} catch (e) {
+				// 			// Si no es JSON válido, devolver el texto como está
+				// 			return valueSpan.textContent;
+				// 		}
+				// 	}
+				// 	return null;
+				// }
+			}
+			
+			topLevelItems.forEach(item => {
+				const itemResult = processElement(item, keynuaPrimitives[item.dataset.key]);
+				if (itemResult !== null) {
+					result[item.dataset.key] = itemResult;
+				}
+			});
+
+			return result;
+		}
+
+		// Función para alternar entre vistas
+		function toggleView() {
+			const listView = document.getElementById('primitivesList');
+			const jsonView = document.getElementById('primitivesJson');
+			const toggleButton = document.getElementById('toggleViewButton');
+			
+			if (listView.style.display !== 'none') {
+				// Cambiar a vista JSON
+				listView.style.display = 'none';
+				jsonView.style.display = 'block';
+				jsonView.textContent = JSON.stringify(getFilteredJson(), null, 2);
+				toggleButton.textContent = 'Modificar JSON';
+			} else {
+				// Cambiar a vista de lista
+				listView.style.display = 'block';
+				jsonView.style.display = 'none';
+				toggleButton.textContent = 'Mostrar JSON';
+			}
+		}
+
+		// Agregar el evento al botón
+		document.addEventListener("DOMContentLoaded", () => {
+			document.getElementById('toggleViewButton').addEventListener('click', toggleView);
+		});
 	</script>
 </body>
 </html>

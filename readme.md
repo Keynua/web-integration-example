@@ -46,3 +46,4 @@ Ingresa en `https://localhost/`.
 
 Si deseas, puedes borrarlos para limpiar el "historial".
 
+**NOTA 2:** Te saldrá una advertencia de que el sitio no es seguro ya que se está utilizando un certificado autofirmado. Puedes continuar mientras solo lo uses en entornos locales. Es necesario utilizar el certificado para poder ingresar mediante HTTPS ya que algunos navegadores bloquean el uso de la cámara para sitios HTTP.
